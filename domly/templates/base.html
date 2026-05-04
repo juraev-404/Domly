@@ -1,0 +1,135 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domly</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 flex flex-col min-h-screen">
+
+<!-- HEADER -->
+<header id="header" class="hidden md:block bg-black text-white fixed top-0 left-0 w-full z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+
+        <!-- LOGO -->
+        <a href="/" class="text-xl font-bold">
+            Domly
+        </a>
+
+        <!-- SEARCH -->
+        <div class="flex-1 flex items-center bg-white rounded-lg overflow-hidden">
+
+            <input
+                type="text"
+                placeholder="Поиск по объявлениям"
+                class="w-full px-3 py-2 text-black outline-none"
+            >
+
+            <!-- filter icon (mobile replacement) -->
+            <button class="px-3 text-black md:hidden">
+                ☰
+            </button>
+
+            <button class="bg-gray-800 text-green-400 px-4 py-2">
+                Найти
+            </button>
+        </div>
+
+        <!-- DESKTOP MENU -->
+        <div class="hidden md:flex gap-4">
+            <a href="/help/" class="hover:text-gray-300">Помощь</a>
+            <a href="/login/" class="hover:text-gray-300">Вход</a>
+            <a href="/register/" class="hover:text-gray-300">Регистрация</a>
+            <a href="/create/" class="text-green-400">Добавить</a>
+        </div>
+
+    </div>
+</header>
+
+<div class="md:hidden fixed top-0 left-0 w-full bg-white z-50 px-3 py-2 shadow">
+
+    <form action="/" method="get" class="flex items-center gap-2">
+
+        <input
+            type="text"
+            name="q"
+            placeholder="Поиск по объявлениям"
+            class="flex-1 bg-gray-100 rounded-full px-3 py-2 text-sm outline-none"
+        >
+
+        <!-- фильтр -->
+        <button type="submit" class="p-2 text-black">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="7" y1="12" x2="17" y2="12"></line>
+                <line x1="10" y1="18" x2="14" y2="18"></line>
+            </svg>
+
+        </button>
+
+    </form>
+
+</div>
+
+
+
+<!-- MAIN -->
+<main class="pt-16 md:pt-20 pb-20 md:pb-0 max-w-6xl mx-auto px-4">
+
+    {% block content %}
+    {% endblock %}
+
+</main>
+
+<!-- FOOTER -->
+<footer class="bg-black text-white mt-auto">
+    <div class="max-w-6xl mx-auto px-4 py-6 text-center text-gray-400">
+        © 2026 Domly — аренда и продажа недвижимости
+    </div>
+</footer>
+
+<!-- ===================== MOBILE BOTTOM NAV ===================== -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t flex justify-around py-2 z-50">
+
+    <a href="" class="flex flex-col items-center text-xs text-black hover:text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>Поиск
+    </a>
+
+    <a href="/favorites/" class="flex flex-col items-center text-xs text-black hover:text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 3h12a1 1 0 011 1v17l-7-5-7 5V4a1 1 0 011-1z"/>
+        </svg>Избранное
+    </a>
+
+    <a href="/create/" class="flex flex-col items-center text-xs text-green-500 hover:text-green-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>Добавить
+    </a>
+
+    <a href="/messages/" class="flex flex-col items-center text-xs text-black hover:text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 15a4 4 0 01-4 4H7l-4 4V5a4 4 0 014-4h10a4 4 0 014 4z"/>
+        </svg>Сообщения
+    </a>
+
+    <a href="/profile/" class="flex flex-col items-center text-xs text-black hover:text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="7" r="4"></circle>
+            <path d="M5.5 21a6.5 6.5 0 0113 0"></path>
+        </svg>Профиль
+    </a>
+
+</nav>
+
+</body>
+</html>
