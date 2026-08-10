@@ -1,59 +1,159 @@
-{% load static %}
+{% load static i18n %}
 
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Domly</title>
+    <title>{% block title %}Domly{% endblock %}</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gallery-scrollbar { scrollbar-width: none; }
+        .gallery-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+    {% block extra_head %}{% endblock %}
 </head>
 
 <body class="bg-gray-100 flex flex-col min-h-screen">
 
 <!-- HEADER -->
-<header id="header" class="hidden md:block bg-black text-white fixed top-0 left-0 w-full z-50">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+<header id="header" class="fixed left-0 top-0 z-50 hidden h-24 w-full border-b border-white/30 bg-black text-white md:block">
+    <div class="mx-auto flex h-full w-full max-w-7xl flex-wrap content-start items-center gap-x-3 px-6 lg:px-8">
 
         <!-- LOGO -->
-        <a href="/" class="text-xl font-bold">
+        <a href="/" class="order-2 mt-2 w-20 shrink-0 text-2xl leading-none tracking-tight">
             Domly
         </a>
 
         <!-- SEARCH -->
-        <div class="flex-1 flex items-center bg-white rounded-lg overflow-hidden">
+        <form action="/" method="get" class="relative order-3 mt-2 flex h-11 min-w-0 flex-1 items-center gap-2 rounded-2xl bg-[#343232] p-1">
+
+            <svg xmlns="http://www.w3.org/2000/svg" class="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-black" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="m20 20-4-4"></path>
+            </svg>
 
             <input
-                type="text"
+                type="search"
+                name="q"
+                value="{{ request.GET.q|default:'' }}"
                 placeholder="Поиск по объявлениям"
-                class="w-full px-3 py-2 text-black outline-none"
+                class="h-9 min-w-0 flex-1 rounded-xl bg-white py-2 pl-10 pr-4 text-base text-black outline-none placeholder:text-gray-600"
             >
 
             <!-- filter icon (mobile replacement) -->
-            <button class="px-3 text-black md:hidden">
-                ☰
-            </button>
-
-            <button class="bg-gray-800 text-green-400 px-4 py-2">
+            <button type="submit" class="h-9 shrink-0 px-3 text-base text-white transition hover:text-gray-300">
                 Найти
             </button>
+        </form>
+
+        <div class="order-4 mt-2 flex min-w-[105px] shrink-0 items-center justify-end gap-2 text-base">
+            <a href="{% url 'city_map' %}" title="Открыть карту города {{ selected_city }}" aria-label="Открыть карту города {{ selected_city }}" class="flex h-7 w-7 shrink-0 items-center justify-center transition hover:text-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 -rotate-12 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21.7 2.3a1 1 0 0 0-1.06-.23l-18 7a1 1 0 0 0 .08 1.89l7.24 2.42 2.42 7.24a1 1 0 0 0 .92.68h.04a1 1 0 0 0 .93-.61l7.66-17.33a1 1 0 0 0-.23-1.06ZM13.5 17.53l-1.77-5.3a1 1 0 0 0-.63-.63L5.8 9.83l13.3-5.17-5.6 12.87Z"></path>
+                </svg>
+            </a>
+
+            <details class="group relative">
+                <summary class="flex cursor-pointer list-none items-center gap-1 transition hover:text-gray-300">
+                    <span>{{ selected_city }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="m6 9 6 6 6-6"></path>
+                    </svg>
+                </summary>
+                <div class="absolute right-0 top-8 z-[60] w-48 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 text-sm text-gray-900 shadow-xl">
+                    {% for city in available_cities %}
+                        <form method="post" action="{% url 'set_city' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="city" value="{{ city }}">
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="flex w-full items-center justify-between px-4 py-2 text-left hover:bg-gray-100 {% if city == selected_city %}font-semibold{% endif %}">
+                                {{ city }}
+                                {% if city == selected_city %}<span aria-hidden="true">✓</span>{% endif %}
+                            </button>
+                        </form>
+                    {% endfor %}
+                </div>
+            </details>
         </div>
 
         <!-- DESKTOP MENU -->
-        <div class="hidden md:flex gap-4">
-            <a href="/help/" class="hover:text-gray-300">Помощь</a>
-            <a href="/login/" class="hover:text-gray-300">Вход</a>
-            <a href="/register/" class="hover:text-gray-300">Регистрация</a>
-            <a href="/create/" class="text-green-400">Добавить</a>
-        </div>
+        <div class="order-1 flex h-8 w-full translate-y-1 items-center gap-5 text-base">
+
+        <a href="{% url 'help' %}" class="transition hover:text-gray-300">Помощь</a>
+        <a href="{% url 'listing_list' %}#filters" class="mr-auto transition hover:text-gray-300">Фильтр</a>
+
+        {% if user.is_authenticated %}
+
+            {% if user.is_moderator or user.is_superuser %}
+                <a href="{% url 'moderation' %}" class="transition hover:text-gray-300">Модерация</a>
+            {% else %}
+                <a href="{% url 'create' %}" class="transition hover:text-gray-300">Добавить</a>
+            {% endif %}
+
+            <div class="flex items-center gap-1.5">
+            <a href="{% url 'messages' %}" title="Сообщения" aria-label="Сообщения{% if unread_message_count %}, непрочитанных: {{ unread_message_count }}{% endif %}" class="relative flex h-7 w-7 items-center justify-center text-gray-300 transition hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V5a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+                </svg>
+                {% if unread_message_count %}<span class="absolute -right-1.5 -top-1.5 min-w-[17px] rounded-full bg-red-500 px-1 text-center text-[10px] font-semibold leading-[17px] text-white">{% if unread_message_count > 99 %}99+{% else %}{{ unread_message_count }}{% endif %}</span>{% endif %}
+            </a>
+
+            <a href="{% url 'favorites' %}" title="Избранное" aria-label="Избранное" class="flex h-7 w-7 items-center justify-center text-gray-300 transition hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1z"></path>
+                </svg>
+            </a>
+
+            <a href="{% url 'profile' %}" title="Профиль" aria-label="Профиль" class="flex h-7 w-7 items-center justify-center">
+                {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" class="h-7 w-7 rounded-full object-cover">
+                {% else %}
+                    <div class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="7" r="4"></circle>
+                            <path d="M5.5 21a6.5 6.5 0 0113 0"></path>
+                        </svg>
+                    </div>
+                {% endif %}
+            </a>
+
+            {% if request.resolver_match.url_name == 'profile' %}
+                <form action="{% url 'logout' %}" method="post" class="flex h-7 items-center">
+                    {% csrf_token %}
+                    <button type="submit"
+                        title="Выход из аккаунта"
+                        class="flex h-7 w-7 items-center justify-center text-gray-400 transition hover:text-red-400"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M3 21h18"></path>
+                            <path d="M6 21V3h9v4"></path>
+                            <path d="M16 17l5-5-5-5"></path>
+                            <path d="M21 12H9"></path>
+                        </svg>
+                    </button>
+                </form>
+            {% endif %}
+            </div>
+
+        {% else %}
+
+            <a href="{% url 'login' %}" class="hover:text-gray-300">Вход</a>
+            <a href="{% url 'register' %}" class="hover:text-gray-300">Регистрация</a>
+            <a href="{% url 'create' %}" class="hover:text-gray-300">Добавить</a>
+
+        {% endif %}
+
+</div>
+
 
     </div>
 </header>
 
-<div class="md:hidden fixed top-0 left-0 w-full bg-white z-50 px-3 py-2 shadow">
+<div class="md:hidden fixed top-0 left-0 w-full h-16 bg-black z-50 px-3 shadow flex items-center">
 
-    <form action="/" method="get" class="flex items-center gap-2">
+    <form action="/" method="get" class="w-full flex items-center gap-2">
 
         <input
             type="text"
@@ -63,14 +163,24 @@
         >
 
         <!-- фильтр -->
-        <button type="submit" class="p-2 text-black">
+        {% if request.resolver_match.url_name == 'listing_list' %}
+        <button type="button" data-mobile-filter-toggle aria-controls="mobile-filter-panel" aria-expanded="false" aria-label="{% translate 'Дополнительные фильтры' %}" title="{% translate 'Дополнительные фильтры' %}" class="relative p-2 text-white">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <line x1="4" y1="6" x2="20" y2="6"></line>
                 <line x1="7" y1="12" x2="17" y2="12"></line>
                 <line x1="10" y1="18" x2="14" y2="18"></line>
             </svg>
-
+            {% if advanced_filters_active %}<span class="absolute right-1 top-1 h-2 w-2 rounded-full bg-green-500" aria-hidden="true"></span>{% endif %}
         </button>
+        {% else %}
+        <a href="{% url 'listing_list' %}#filters" aria-label="Фильтр" title="Фильтр" class="p-2 text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="7" y1="12" x2="17" y2="12"></line>
+                <line x1="10" y1="18" x2="14" y2="18"></line>
+            </svg>
+        </a>
+        {% endif %}
 
     </form>
 
@@ -79,7 +189,17 @@
 
 
 <!-- MAIN -->
-<main class="pt-16 md:pt-20 pb-20 md:pb-0 max-w-6xl mx-auto px-4">
+<main class="w-full min-w-0 max-w-6xl mx-auto overflow-x-hidden px-4 pt-16 pb-20 md:pt-28 md:pb-0">
+
+    {% if messages %}
+        <div class="mb-6 space-y-3" aria-live="polite">
+            {% for message in messages %}
+                <div class="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
     {% block content %}
     {% endblock %}
@@ -94,35 +214,36 @@
 </footer>
 
 <!-- ===================== MOBILE BOTTOM NAV ===================== -->
-<nav class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t flex justify-around py-2 z-50">
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-black border-t flex justify-around py-2 z-50">
 
-    <a href="" class="flex flex-col items-center text-xs text-black hover:text-gray-400">
+    <a href="{% url 'listing_list' %}" aria-label="Главная" class="flex flex-col items-center text-xs text-white hover:text-gray-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>Поиск
+            <path d="M3 10.5 12 3l9 7.5"></path>
+            <path d="M5 9v12h14V9"></path>
+            <path d="M9 21v-6h6v6"></path>
+        </svg>Главная
     </a>
 
-    <a href="/favorites/" class="flex flex-col items-center text-xs text-black hover:text-gray-400">
+    <a href="{% url 'favorites' %}" class="flex flex-col items-center text-xs text-white hover:text-gray-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M6 3h12a1 1 0 011 1v17l-7-5-7 5V4a1 1 0 011-1z"/>
         </svg>Избранное
     </a>
 
-    <a href="/create/" class="flex flex-col items-center text-xs text-green-500 hover:text-green-600">
+    <a href="{% if user.is_moderator or user.is_superuser %}{% url 'moderation' %}{% else %}{% url 'create' %}{% endif %}" class="flex flex-col items-center text-xs text-green-500 hover:text-green-600">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>Добавить
+        </svg>{% if user.is_moderator or user.is_superuser %}Модерация{% else %}Добавить{% endif %}
     </a>
 
-    <a href="/messages/" class="flex flex-col items-center text-xs text-black hover:text-gray-400">
+    <a href="{% url 'messages' %}" class="relative flex flex-col items-center text-xs text-white hover:text-gray-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M21 15a4 4 0 01-4 4H7l-4 4V5a4 4 0 014-4h10a4 4 0 014 4z"/>
-        </svg>Сообщения
+        </svg>{% if unread_message_count %}<span class="absolute left-1/2 top-[-5px] min-w-[16px] rounded-full bg-red-500 px-1 text-center text-[9px] font-semibold leading-4 text-white">{% if unread_message_count > 99 %}99+{% else %}{{ unread_message_count }}{% endif %}</span>{% endif %}Сообщения
     </a>
 
-    <a href="/profile/" class="flex flex-col items-center text-xs text-black hover:text-gray-400">
+    <a href="{% url 'profile' %}" class="flex flex-col items-center text-xs text-white hover:text-gray-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <circle cx="12" cy="7" r="4"></circle>
             <path d="M5.5 21a6.5 6.5 0 0113 0"></path>
@@ -131,5 +252,6 @@
 
 </nav>
 
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Модерация" %} — Domly{% endblock %}
+
+{% block content %}
+<section class="py-6 md:py-10">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <p class="text-sm font-medium text-green-700">{% translate "Доступ модератора" %}</p>
+            <h1 class="mt-1 text-3xl font-semibold tracking-tight text-gray-950 md:text-4xl">
+                {% translate "Очередь модерации" %}
+            </h1>
+            <p class="mt-2 text-gray-600">
+                {% blocktranslate count counter=pending_count %}На проверке {{ counter }} объявление{% plural %}На проверке {{ counter }} объявлений{% endblocktranslate %}
+            </p>
+        </div>
+    </div>
+
+    {% if page_obj %}
+        <div class="mt-7 space-y-3">
+            {% for listing in page_obj %}
+                <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-gray-300 hover:shadow-md md:p-5">
+                    <a href="{{ listing.get_absolute_url }}" class="group grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h2 class="truncate font-semibold text-gray-950 md:text-lg">{{ listing.title }}</h2>
+                                <span class="shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900">
+                                    {{ listing.get_status_display }}
+                                </span>
+                            </div>
+                            <p class="mt-2 font-semibold text-gray-950">{{ listing.price|floatformat:"-2" }} {{ listing.currency }}</p>
+                            <p class="mt-1 truncate text-sm text-gray-600">{{ listing.city.name }} · {{ listing.address }}</p>
+                            <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 sm:text-sm">
+                                <span>@{{ listing.owner.username }}</span>
+                                <time datetime="{{ listing.submitted_at|default:listing.created_at|date:'c' }}">
+                                    {% translate "Отправлено" %} {{ listing.submitted_at|default:listing.created_at|date:"d.m.Y H:i" }}
+                                </time>
+                            </div>
+                        </div>
+                        <span class="inline-flex w-full items-center justify-center rounded-xl bg-black px-5 py-2.5 text-sm font-medium text-white transition group-hover:bg-gray-800 sm:w-auto">
+                            {% translate "Проверить" %}
+                        </span>
+                    </a>
+                </article>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="mt-8 flex items-center justify-center gap-3" aria-label="{% translate 'Страницы очереди' %}">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50">{% translate "Назад" %}</a>
+                {% endif %}
+                <span class="text-sm text-gray-600">
+                    {% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Страница {{ current }} из {{ total }}{% endblocktranslate %}
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50">{% translate "Дальше" %}</a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="mt-8 rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-14 text-center">
+            <h2 class="text-xl font-semibold text-gray-950">{% translate "Очередь пуста" %}</h2>
+            <p class="mt-2 text-gray-600">{% translate "Сейчас нет объявлений, ожидающих проверки." %}</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex min-h-[calc(100dvh-7.25rem)] w-full items-center justify-center py-4 md:min-h-0 md:py-8">
+<section class="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm">
+    <h1 class="text-2xl font-bold">Вход</h1>
+    <p class="mt-1 text-sm text-gray-500">Используйте ник, номер телефона или email.</p>
+    <form method="post" class="mt-6 space-y-4" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ form.non_field_errors }}</div>{% endif %}
+        {% for field in form %}
+            {% if field.name == "remember_me" %}
+                <label class="flex items-center gap-2 text-sm text-gray-700">{{ field }} {{ field.label }}</label>
+            {% else %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="mb-1 block text-sm font-medium">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+        <button type="submit" class="w-full rounded-lg bg-black py-2.5 font-medium text-white hover:bg-gray-800">Войти</button>
+    </form>
+    <p class="mt-4 text-center text-sm text-gray-600">Нет аккаунта? <a class="font-medium text-green-700" href="{% url 'register' %}">Зарегистрироваться</a></p>
+</section>
+</div>
+{% endblock %}

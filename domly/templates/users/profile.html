@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<section class="w-full min-w-0 py-5 md:py-8">
+    <div class="mb-6 flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm md:p-6">
+        {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" alt="Аватар {{ user.username }}" class="h-16 w-16 rounded-full object-cover md:h-20 md:w-20">
+        {% else %}
+            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gray-900 text-2xl font-semibold text-white md:h-20 md:w-20">{{ user.username|first|upper }}</div>
+        {% endif %}
+        <div class="min-w-0">
+            <h1 class="truncate text-xl font-semibold text-gray-950 md:text-2xl">{{ user.get_full_name|default:user.username }}</h1>
+            <p class="truncate text-sm text-gray-500">@{{ user.username }}</p>
+            <p class="mt-1 text-xs text-gray-400">На Domly с {{ user.date_joined|date:"m.Y" }}</p>
+        </div>
+    </div>
+
+    <nav class="mb-6 w-full max-w-full rounded-2xl bg-white p-1.5 shadow-sm" aria-label="Разделы личного кабинета">
+        <div class="grid grid-cols-2 gap-1 sm:flex sm:min-w-max">
+            <a href="{% url 'profile' %}" class="rounded-xl px-3 py-2.5 text-center text-sm font-medium transition sm:px-4 {% if active_tab == 'profile' %}bg-black text-white{% else %}text-gray-600 hover:bg-gray-100{% endif %}">Профиль</a>
+            <a href="{% url 'profile_listings' %}" class="rounded-xl px-3 py-2.5 text-center text-sm font-medium transition sm:px-4 {% if active_tab == 'listings' %}bg-black text-white{% else %}text-gray-600 hover:bg-gray-100{% endif %}">Объявления <span class="ml-1 opacity-70">{{ listing_count }}</span></a>
+            <a href="{% url 'profile_drafts' %}" class="rounded-xl px-3 py-2.5 text-center text-sm font-medium transition sm:px-4 {% if active_tab == 'drafts' %}bg-black text-white{% else %}text-gray-600 hover:bg-gray-100{% endif %}">Черновики <span class="ml-1 opacity-70">{{ draft_count }}</span></a>
+            <a href="{% url 'favorites' %}" class="rounded-xl px-3 py-2.5 text-center text-sm font-medium transition sm:px-4 {% if active_tab == 'favorites' %}bg-black text-white{% else %}text-gray-600 hover:bg-gray-100{% endif %}">Избранное <span class="ml-1 opacity-70">{{ favorite_count }}</span></a>
+        </div>
+    </nav>
+
+    {% if active_tab == "profile" %}
+        <div class="rounded-2xl bg-white p-5 shadow-sm md:p-7">
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-gray-950">Личные данные</h2>
+                <p class="mt-1 text-sm text-gray-500">Эти данные помогут другим пользователям узнать, с кем они общаются.</p>
+            </div>
+            <form method="post" enctype="multipart/form-data" class="max-w-2xl space-y-5">
+                {% csrf_token %}
+                {% if profile_form.non_field_errors %}<div class="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{{ profile_form.non_field_errors }}</div>{% endif %}
+                <div>
+                    <div class="mb-1.5 flex items-center justify-between gap-3">
+                        <label for="{{ profile_form.avatar.id_for_label }}" class="text-sm font-medium text-gray-700">Фото профиля</label>
+                        {% if user.avatar %}
+                            <label for="avatar-clear_id" class="flex shrink-0 cursor-pointer items-center gap-2 text-sm font-medium text-red-600 transition hover:text-red-700">
+                                <input data-avatar-clear type="checkbox" name="avatar-clear" id="avatar-clear_id" class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-200"{% if profile_form.avatar.field.widget.checked %} checked{% endif %}>
+                                <span>{% translate "Удалить" %}</span>
+                            </label>
+                        {% endif %}
+                    </div>
+                    <input type="file" name="{{ profile_form.avatar.html_name }}" id="{{ profile_form.avatar.id_for_label }}" accept="image/jpeg,image/png,image/webp" class="block min-w-0 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-black file:px-3 file:py-2 file:text-white">
+                    {% for error in profile_form.avatar.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="grid gap-5 sm:grid-cols-2">
+                    <div>
+                        <label for="{{ profile_form.first_name.id_for_label }}" class="mb-1.5 block text-sm font-medium text-gray-700">Имя</label>
+                        {{ profile_form.first_name }}
+                        {% for error in profile_form.first_name.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div>
+                        <label for="{{ profile_form.last_name.id_for_label }}" class="mb-1.5 block text-sm font-medium text-gray-700">Фамилия</label>
+                        {{ profile_form.last_name }}
+                        {% for error in profile_form.last_name.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+                <div>
+                    <label for="{{ profile_form.username.id_for_label }}" class="mb-1.5 block text-sm font-medium text-gray-700">Ник</label>
+                    {{ profile_form.username }}
+                    {% for error in profile_form.username.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label for="{{ profile_form.email.id_for_label }}" class="mb-1.5 block text-sm font-medium text-gray-700">Электронная почта</label>
+                    {{ profile_form.email }}
+                    {% for error in profile_form.email.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+                </div>
+                <div>
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700">Номер телефона</span>
+                    <div class="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                        <span>{{ user.phone }}</span>
+                        {% if user.is_phone_verified %}<span class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">Подтверждён</span>{% endif %}
+                    </div>
+                    <p class="mt-1.5 text-xs text-gray-400">Смена подтверждённого номера будет добавлена отдельным безопасным процессом.</p>
+                </div>
+                <button type="submit" class="rounded-xl bg-black px-5 py-3 text-sm font-medium text-white transition hover:bg-gray-800">Сохранить изменения</button>
+            </form>
+        </div>
+    {% else %}
+        <div class="mb-5 flex items-end justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-950">{% if active_tab == "listings" %}Мои объявления{% elif active_tab == "drafts" %}Черновики{% else %}Избранное{% endif %}</h2>
+                <p class="mt-1 text-sm text-gray-500">{% if active_tab == "listings" %}Опубликованные объявления и те, что проходят модерацию.{% elif active_tab == "drafts" %}Неопубликованные объявления можно продолжить позже.{% else %}Сохранённые объявления всегда под рукой.{% endif %}</p>
+            </div>
+            {% if active_tab != "favorites" %}<a href="{% url 'create' %}" class="hidden shrink-0 rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white sm:block">Добавить объявление</a>{% endif %}
+        </div>
+        {% if profile_listings %}
+            <div class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+                {% for listing in profile_listings %}{% include "listings/includes/card.html" %}{% endfor %}
+            </div>
+        {% else %}
+            <div class="rounded-2xl border border-dashed border-gray-300 bg-white px-5 py-14 text-center">
+                <h3 class="font-medium text-gray-900">Здесь пока пусто</h3>
+                <p class="mx-auto mt-2 max-w-md text-sm text-gray-500">{% if active_tab == "favorites" %}Добавляйте интересные объявления в избранное с их страницы.{% elif active_tab == "drafts" %}Сохранённые черновики появятся в этом разделе.{% else %}Создайте первое объявление — его статус будет виден прямо на карточке.{% endif %}</p>
+                {% if active_tab != "favorites" %}<a href="{% url 'create' %}" class="mt-5 inline-flex rounded-xl bg-black px-5 py-3 text-sm font-medium text-white">Создать объявление</a>{% endif %}
+            </div>
+        {% endif %}
+    {% endif %}
+</section>
+{% endblock %}

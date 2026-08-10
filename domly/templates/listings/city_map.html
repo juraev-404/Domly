@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="mb-4 flex items-end justify-between gap-4">
+        <div>
+            <p class="text-sm text-gray-500">Объявления на карте</p>
+            <h1 class="text-2xl font-semibold">{{ selected_city }}</h1>
+        </div>
+        <span class="text-sm text-gray-500">Найдено: {{ city_listings|length }}</span>
+    </div>
+
+    <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div id="city-map" class="h-[62vh] min-h-[420px] overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 shadow-sm" aria-label="Карта города {{ selected_city }}"></div>
+
+        <aside class="rounded-2xl bg-white p-5 shadow-sm">
+            <h2 class="text-lg font-semibold">Объявления</h2>
+            {% if city_listings %}
+                <div class="mt-4 space-y-3">
+                    {% for listing in city_listings %}
+                        <article>{{ listing }}</article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="mt-6 rounded-xl bg-gray-50 p-5 text-sm text-gray-600">
+                    В городе {{ selected_city }} пока нет опубликованных объявлений. Когда появится модель объявлений с координатами, они будут показаны здесь и отмечены на карте.
+                </div>
+            {% endif %}
+        </aside>
+    </div>
+</section>
+
+{{ map_config|json_script:"city-map-config" }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    const cityMapConfig = JSON.parse(document.getElementById("city-map-config").textContent);
+    const cityMap = L.map("city-map").setView(
+        [cityMapConfig.latitude, cityMapConfig.longitude],
+        cityMapConfig.zoom
+    );
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(cityMap);
+
+    L.marker([cityMapConfig.latitude, cityMapConfig.longitude])
+        .addTo(cityMap)
+        .bindPopup(cityMapConfig.name)
+        .openPopup();
+</script>
+{% endblock %}
