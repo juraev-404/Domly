@@ -250,8 +250,12 @@ class ProfileTests(TestCase):
         listings_response = self.client.get(reverse("profile_listings"))
 
         self.assertContains(profile_response, 'title="Выход из аккаунта"')
+        self.assertContains(profile_response, "data-logout-form", count=2)
+        self.assertContains(profile_response, "data-logout-dialog")
+        self.assertContains(profile_response, "Выйти из аккаунта?")
         self.assertNotContains(catalog_response, 'title="Выход из аккаунта"')
         self.assertNotContains(listings_response, 'title="Выход из аккаунта"')
+        self.assertNotContains(listings_response, "data-logout-dialog")
 
 
 class PublicProfileTests(TestCase):

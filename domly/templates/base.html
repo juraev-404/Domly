@@ -120,7 +120,7 @@
             </a>
 
             {% if request.resolver_match.url_name == 'profile' %}
-                <form action="{% url 'logout' %}" method="post" class="flex h-7 items-center">
+                <form action="{% url 'logout' %}" method="post" data-logout-form class="flex h-7 items-center">
                     {% csrf_token %}
                     <button type="submit"
                         title="Выход из аккаунта"
@@ -207,9 +207,9 @@
 </main>
 
 <!-- FOOTER -->
-<footer class="bg-black text-white mt-auto">
-    <div class="max-w-6xl mx-auto px-4 py-6 text-center text-gray-400">
-        © 2026 Domly — аренда и продажа недвижимости
+<footer data-site-footer class="mt-auto bg-black pb-16 text-white md:pb-0">
+    <div class="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center text-gray-400">
+        <p>© 2026 Domly — {% translate "аренда и продажа недвижимости" %}</p>
     </div>
 </footer>
 

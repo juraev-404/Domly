@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load static i18n %}
 
 {% block content %}
 <section class="w-full min-w-0 py-5 md:py-8">
@@ -14,6 +14,19 @@
             <p class="truncate text-sm text-gray-500">@{{ user.username }}</p>
             <p class="mt-1 text-xs text-gray-400">На Domly с {{ user.date_joined|date:"m.Y" }}</p>
         </div>
+        {% if active_tab == "profile" %}
+            <form action="{% url 'logout' %}" method="post" data-logout-form class="ml-auto flex shrink-0 md:hidden">
+                {% csrf_token %}
+                <button type="submit" title="Выход из аккаунта" aria-label="{% translate 'Выйти из аккаунта' %}" class="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-red-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 21h18"></path>
+                        <path d="M6 21V3h9v4"></path>
+                        <path d="M16 17l5-5-5-5"></path>
+                        <path d="M21 12H9"></path>
+                    </svg>
+                </button>
+            </form>
+        {% endif %}
     </div>
 
     <nav class="mb-6 w-full max-w-full rounded-2xl bg-white p-1.5 shadow-sm" aria-label="Разделы личного кабинета">
@@ -101,4 +114,27 @@
         {% endif %}
     {% endif %}
 </section>
+
+{% if active_tab == "profile" %}
+    <dialog data-logout-dialog aria-labelledby="logout-dialog-title" aria-describedby="logout-dialog-description" class="m-auto w-[calc(100%-2rem)] max-w-sm overflow-hidden rounded-2xl bg-white p-0 text-gray-950 shadow-2xl backdrop:bg-black/60">
+        <div class="p-5 sm:p-6">
+            <div class="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 21h18"></path><path d="M6 21V3h9v4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path>
+                </svg>
+            </div>
+            <h2 id="logout-dialog-title" class="mt-4 text-lg font-semibold">{% translate "Выйти из аккаунта?" %}</h2>
+            <p id="logout-dialog-description" class="mt-2 text-sm leading-5 text-gray-500">{% translate "Вы сможете снова войти по нику, номеру телефона или email и паролю." %}</p>
+            <div class="mt-6 grid grid-cols-2 gap-3">
+                <button data-logout-cancel type="button" class="rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50">{% translate "Отмена" %}</button>
+                <button data-logout-confirm type="button" class="rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700">{% translate "Выйти" %}</button>
+            </div>
+        </div>
+    </dialog>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ block.super }}
+    {% if active_tab == "profile" %}<script src="{% static 'users/logout_dialog.js' %}" defer></script>{% endif %}
 {% endblock %}

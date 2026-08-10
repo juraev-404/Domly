@@ -7,7 +7,9 @@
 <section class="w-full min-w-0 py-5 md:py-8">
     <div class="mb-6">
         <h1 class="text-2xl font-semibold tracking-tight text-gray-950 md:text-3xl">Недвижимость в {{ selected_city }}</h1>
-        <p class="mt-1 text-sm text-gray-500">Аренда и продажа недвижимости напрямую от владельцев.</p>
+        <a href="{% url 'help' %}" class="mt-1 inline-block text-sm text-gray-900 transition hover:text-gray-950">
+            {% translate "Как пользоваться Domly? Ответы тут — в разделе помощи." %}
+        </a>
     </div>
 
     <nav class="gallery-scrollbar -mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Быстрые категории">

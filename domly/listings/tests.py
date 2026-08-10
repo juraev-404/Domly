@@ -49,6 +49,14 @@ class HelpPageTests(TestCase):
 
         self.assertEqual(response.status_code, 405)
 
+    def test_home_links_to_help_and_footer_clears_mobile_navigation(self):
+        response = self.client.get(reverse("listing_list"))
+
+        self.assertContains(response, "data-site-footer")
+        self.assertContains(response, "pb-16")
+        self.assertContains(response, "Как пользоваться Domly?")
+        self.assertNotContains(response, "Аренда и продажа недвижимости напрямую от владельцев.")
+
 
 class ListingListTests(TestCase):
     @classmethod
