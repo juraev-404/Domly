@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load static i18n %}
 
 {% block title %}{{ listing.title }} — Domly{% endblock %}
 
@@ -27,7 +27,7 @@
                 <p class="mt-1 text-sm">Это объявление пока не видно другим пользователям.</p>
             </div>
             <span class="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-sm font-medium">
-                {{ listing.get_status_display }}
+                {{ listing.status_label }}
             </span>
         </div>
     {% endif %}
@@ -39,6 +39,14 @@
             <p class="mt-3 text-xs text-red-800">
                 {% blocktranslate with date=latest_moderation_decision.created_at|date:"d.m.Y H:i" %}Решение принято {{ date }}. Исправьте объявление и отправьте его повторно.{% endblocktranslate %}
             </p>
+        </section>
+    {% endif %}
+
+    {% if active_listing_block %}
+        <section class="mb-5 rounded-2xl border border-red-300 bg-red-50 px-5 py-4 text-red-950">
+            <h2 class="font-semibold">{% translate "Объявление заблокировано модератором" %}</h2>
+            <p class="mt-2 whitespace-pre-line text-sm leading-6">{{ active_listing_block.reason }}</p>
+            <p class="mt-2 text-xs text-red-800">{% if active_listing_block.expires_at %}{% translate "До" %} {{ active_listing_block.expires_at|date:"d.m.Y H:i" }}{% else %}{% translate "Без ограничения срока" %}{% endif %}</p>
         </section>
     {% endif %}
 
@@ -68,6 +76,19 @@
                     {% translate "Отклонить" %}
                 </button>
             </form>
+        </section>
+    {% endif %}
+
+    {% if can_manage_blocks %}
+        <section class="mb-5 rounded-2xl border border-gray-300 bg-white p-5 shadow-sm">
+            <div class="flex flex-wrap items-start justify-between gap-3"><div><p class="text-sm font-medium text-red-700">{% translate "Защита площадки" %}</p><h2 class="mt-1 text-xl font-semibold">{% translate "Блокировка" %}</h2></div><a href="{% url 'moderation_blocks' %}" class="text-sm font-medium text-gray-600 hover:text-black">{% translate "История блокировок" %}</a></div>
+            {% if active_listing_block %}
+                <p class="mt-4 text-sm text-gray-600">{% translate "Эта блокировка уже активна. Разблокировать объявление можно на странице истории." %}</p>
+            {% endif %}
+            <div class="mt-5 grid gap-5 lg:grid-cols-2">
+                {% if can_block_listing %}<form method="post" action="{% url 'block_listing' listing.public_id %}" class="rounded-xl bg-gray-50 p-4">{% csrf_token %}<h3 class="font-semibold">{% translate "Заблокировать объявление" %}</h3><textarea name="reason" required minlength="5" rows="3" class="mt-3 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="{% translate 'Причина, которую увидит автор' %}"></textarea><select name="duration" class="mt-2 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"><option value="1">{% translate "1 день" %}</option><option value="7" selected>{% translate "7 дней" %}</option><option value="30">{% translate "30 дней" %}</option><option value="permanent">{% translate "Без срока" %}</option></select><button class="mt-3 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-700">{% translate "Заблокировать объявление" %}</button></form>{% endif %}
+                {% if can_block_owner %}<form method="post" action="{% url 'block_user' listing.owner.username %}" class="rounded-xl bg-gray-50 p-4">{% csrf_token %}<input type="hidden" name="listing_public_id" value="{{ listing.public_id }}"><h3 class="font-semibold">{% blocktranslate with username=listing.owner.username %}Заблокировать @{{ username }}{% endblocktranslate %}</h3><textarea name="reason" required minlength="5" rows="3" class="mt-3 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="{% translate 'Причина блокировки аккаунта' %}"></textarea><select name="duration" class="mt-2 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"><option value="1">{% translate "1 день" %}</option><option value="7" selected>{% translate "7 дней" %}</option><option value="30">{% translate "30 дней" %}</option><option value="permanent">{% translate "Без срока" %}</option></select><button class="mt-3 rounded-xl border border-red-300 bg-white px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50">{% translate "Заблокировать аккаунт" %}</button></form>{% endif %}
+            </div>
         </section>
     {% endif %}
 
@@ -149,6 +170,47 @@
                 {% endif %}
             </span>
         </div>
+        {% if listing.latitude is not None and listing.longitude is not None %}
+            <a href="{% url 'city_map' %}?city={{ listing.city.name|urlencode }}&amp;listing={{ listing.public_id }}" class="mt-3 inline-flex items-center gap-2 text-sm font-medium text-gray-700 transition hover:text-black">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6 7-12a7 7 0 1 0-14 0c0 6 7 12 7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
+                Показать расположение на карте
+            </a>
+        {% endif %}
+
+        {% if is_owner %}
+            <section class="mt-5 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="listing-management-title">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 id="listing-management-title" class="font-semibold text-gray-950">{% translate "Управление объявлением" %}</h2>
+                        <p class="mt-1 text-sm text-gray-500">{% translate "Текущий статус:" %} <span class="font-medium text-gray-800">{{ listing.status_label }}</span></p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        {% if can_archive %}
+                            <form method="post" action="{% url 'archive_listing' listing.public_id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-800 transition hover:border-gray-500">{% translate "Снять с публикации" %}</button>
+                            </form>
+                        {% endif %}
+                        {% if can_restore %}
+                            <form method="post" action="{% url 'restore_listing' listing.public_id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800">{% translate "Восстановить публикацию" %}</button>
+                            </form>
+                        {% endif %}
+                        {% if can_complete %}
+                            <form method="post" action="{% url 'complete_listing' listing.public_id %}" data-listing-confirm-form data-confirm-title="{{ completion_action_label }}?" data-confirm-description="{% translate 'Объявление исчезнет из поиска. Его можно будет снова опубликовать из личного кабинета.' %}" data-confirm-button="{{ completion_action_label }}">
+                                {% csrf_token %}
+                                <button type="submit" class="rounded-xl border border-green-300 bg-green-50 px-4 py-2.5 text-sm font-medium text-green-800 transition hover:bg-green-100">{{ completion_action_label }}</button>
+                            </form>
+                        {% endif %}
+                        <form method="post" action="{% url 'delete_listing' listing.public_id %}" data-listing-confirm-form data-confirm-title="{% translate 'Удалить объявление?' %}" data-confirm-description="{% translate 'Объявление исчезнет из личного кабинета и поиска. Это действие нельзя отменить самостоятельно.' %}" data-confirm-button="{% translate 'Удалить' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="rounded-xl px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50">{% translate "Удалить" %}</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        {% endif %}
     </div>
 
     <div class="mt-7 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -269,6 +331,15 @@
                     {{ listing.owner.phone }}
                 </a>
                 <p class="mt-3 text-center text-xs text-gray-500">Скажите, что нашли объявление на Domly</p>
+                {% if can_report %}
+                    <div id="report-listing" class="mt-4 border-t border-gray-200 pt-4 text-center">
+                        {% if has_pending_report %}
+                            <p class="text-sm text-gray-500">{% translate "Ваша жалоба уже рассматривается" %}</p>
+                        {% else %}
+                            <button type="button" data-report-open class="text-sm font-medium text-red-600 transition hover:text-red-700">{% translate "Пожаловаться на объявление" %}</button>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </aside>
     </div>
@@ -291,9 +362,43 @@
     <span data-lightbox-counter class="absolute bottom-5 rounded-full bg-white/10 px-3 py-1.5 text-sm text-white"></span>
 </div>
 {% endif %}
+
+{% if is_owner %}
+<dialog data-listing-action-dialog aria-labelledby="listing-action-title" aria-describedby="listing-action-description" class="m-auto w-[calc(100%-2rem)] max-w-sm overflow-hidden rounded-2xl bg-white p-0 text-gray-950 shadow-2xl backdrop:bg-black/60">
+    <div class="p-5 sm:p-6">
+        <div class="flex h-11 w-11 items-center justify-center rounded-full bg-amber-50 text-amber-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.7 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z"></path></svg>
+        </div>
+        <h2 id="listing-action-title" data-listing-action-title class="mt-4 text-lg font-semibold"></h2>
+        <p id="listing-action-description" data-listing-action-description class="mt-2 text-sm leading-5 text-gray-500"></p>
+        <div class="mt-6 grid grid-cols-2 gap-3">
+            <button data-listing-action-cancel type="button" class="rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50">{% translate "Отмена" %}</button>
+            <button data-listing-action-confirm type="button" class="rounded-xl bg-black px-4 py-3 text-sm font-medium text-white transition hover:bg-gray-800"></button>
+        </div>
+    </div>
+</dialog>
+{% endif %}
+{% if can_report and not has_pending_report %}
+<dialog data-report-dialog aria-labelledby="report-dialog-title" class="m-auto w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-2xl bg-white p-0 text-gray-950 shadow-2xl backdrop:bg-black/60">
+    <form method="post" action="{% url 'report_listing' listing.public_id %}" class="p-5 sm:p-6">
+        {% csrf_token %}
+        <div class="flex items-start justify-between gap-4">
+            <div><h2 id="report-dialog-title" class="text-lg font-semibold">{% translate "Жалоба на объявление" %}</h2><p class="mt-1 text-sm text-gray-500">{% translate "Жалобу увидят только администраторы и модераторы." %}</p></div>
+            <button type="button" data-report-close aria-label="{% translate 'Закрыть' %}" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100">×</button>
+        </div>
+        <div class="mt-5 space-y-4">
+            <div><label for="{{ listing_report_form.reason.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ listing_report_form.reason.label }}</label>{{ listing_report_form.reason }}</div>
+            <div><label for="{{ listing_report_form.details.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ listing_report_form.details.label }}</label>{{ listing_report_form.details }}</div>
+        </div>
+        <div class="mt-6 grid grid-cols-2 gap-3"><button type="button" data-report-close class="rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium">{% translate "Отмена" %}</button><button type="submit" class="rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700">{% translate "Отправить жалобу" %}</button></div>
+    </form>
+</dialog>
+{% endif %}
 {% endblock %}
 
 {% block extra_scripts %}
+{% if is_owner %}<script src="{% static 'listings/lifecycle.js' %}" defer></script>{% endif %}
+{% if can_report and not has_pending_report %}<script src="{% static 'listings/report_dialog.js' %}" defer></script>{% endif %}
 {% if listing_images %}
 <script>
 (() => {

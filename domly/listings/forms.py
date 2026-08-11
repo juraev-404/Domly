@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from .models import City, Listing, ListingImage
+from .models import City, Listing, ListingImage, ListingReport
 
 
 INPUT_CLASS = (
@@ -36,6 +36,98 @@ class ModerationRejectForm(forms.Form):
         if not reason:
             raise ValidationError(_("Укажите причину отклонения."))
         return reason
+
+
+class ListingReportForm(forms.ModelForm):
+    class Meta:
+        model = ListingReport
+        fields = ("reason", "details")
+        labels = {
+            "reason": _("Причина"),
+            "details": _("Подробности"),
+        }
+        widgets = {
+            "reason": forms.Select(attrs={"class": SELECT_CLASS}),
+            "details": forms.Textarea(
+                attrs={
+                    "class": INPUT_CLASS,
+                    "rows": 4,
+                    "placeholder": _("Коротко опишите, что не так с объявлением"),
+                }
+            ),
+        }
+
+    def clean_details(self):
+        details = self.cleaned_data.get("details", "").strip()
+        if self.cleaned_data.get("reason") == ListingReport.Reason.OTHER and len(details) < 10:
+            raise ValidationError(_("Для причины «Другое» добавьте подробности."))
+        return details
+
+
+class ListingReportReviewForm(forms.Form):
+    resolution_note = forms.CharField(
+        label=_("Комментарий модератора"),
+        max_length=1000,
+        widget=forms.Textarea(
+            attrs={
+                "class": INPUT_CLASS,
+                "rows": 3,
+                "placeholder": _("Кратко объясните принятое решение"),
+            }
+        ),
+    )
+
+    def clean_resolution_note(self):
+        note = self.cleaned_data["resolution_note"].strip()
+        if len(note) < 5:
+            raise ValidationError(_("Добавьте короткий комментарий к решению."))
+        return note
+
+
+class ModerationBlockForm(forms.Form):
+    class Duration:
+        DAY = "1"
+        WEEK = "7"
+        MONTH = "30"
+        PERMANENT = "permanent"
+        choices = (
+            (DAY, _("1 день")),
+            (WEEK, _("7 дней")),
+            (MONTH, _("30 дней")),
+            (PERMANENT, _("Без срока")),
+        )
+
+    reason = forms.CharField(
+        label=_("Причина блокировки"),
+        max_length=1000,
+        widget=forms.Textarea(attrs={"class": INPUT_CLASS, "rows": 3}),
+    )
+    duration = forms.ChoiceField(
+        label=_("Срок"),
+        choices=Duration.choices,
+        initial=Duration.WEEK,
+        widget=forms.Select(attrs={"class": SELECT_CLASS}),
+    )
+
+    def clean_reason(self):
+        reason = self.cleaned_data["reason"].strip()
+        if len(reason) < 5:
+            raise ValidationError(_("Укажите понятную причину блокировки."))
+        return reason
+
+
+class ModerationUnblockForm(forms.Form):
+    note = forms.CharField(
+        label=_("Причина разблокировки"),
+        max_length=1000,
+        widget=forms.Textarea(attrs={"class": INPUT_CLASS, "rows": 2}),
+    )
+
+    def clean_note(self):
+        note = self.cleaned_data["note"].strip()
+        if len(note) < 5:
+            raise ValidationError(_("Укажите причину разблокировки."))
+        return note
 
 
 class MultipleImageInput(forms.ClearableFileInput):
@@ -91,6 +183,8 @@ class ListingCreateForm(forms.ModelForm):
             "currency",
             "is_negotiable",
             "address",
+            "latitude",
+            "longitude",
             "rooms",
             "area",
             "floor",
@@ -106,6 +200,8 @@ class ListingCreateForm(forms.ModelForm):
             "currency": "Валюта",
             "is_negotiable": "Торг уместен",
             "address": "Адрес",
+            "latitude": "Широта",
+            "longitude": "Долгота",
             "rooms": "Комнаты",
             "area": "Площадь, м²",
             "floor": "Этаж",
@@ -136,6 +232,8 @@ class ListingCreateForm(forms.ModelForm):
             "address": forms.TextInput(
                 attrs={"class": INPUT_CLASS, "placeholder": "Улица, дом, район"}
             ),
+            "latitude": forms.HiddenInput(),
+            "longitude": forms.HiddenInput(),
             "rooms": forms.NumberInput(
                 attrs={"class": INPUT_CLASS, "min": "1", "inputmode": "numeric"}
             ),
@@ -191,4 +289,18 @@ class ListingCreateForm(forms.ModelForm):
             self.add_error("images", "В объявлении может быть не более 10 фотографий.")
         if self.submit_action == "publish" and final_image_count == 0:
             self.add_error("images", "Для отправки на модерацию добавьте хотя бы одну фотографию.")
+
+        latitude = cleaned_data.get("latitude")
+        longitude = cleaned_data.get("longitude")
+        if (latitude is None) != (longitude is None):
+            self.add_error(
+                "latitude",
+                "Точка на карте должна содержать широту и долготу.",
+            )
+        elif self.submit_action == "publish" and latitude is None:
+            self.add_error(
+                "latitude",
+                "Для отправки на модерацию укажите точное место объекта на карте.",
+            )
+
         return cleaned_data

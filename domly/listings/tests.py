@@ -1,20 +1,42 @@
+import json
+from datetime import timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+from urllib.parse import parse_qs, urlparse
 from uuid import uuid4
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
-from .models import City, Favorite, Listing, ListingImage, ModerationDecision
+from users.models import Notification, UserBlock
+
+from .locations import get_selected_city
+from .geocoding import GeocodingRateLimited, geocode_address
+from .models import City, Favorite, Listing, ListingBlock, ListingImage, ListingReport, ModerationDecision
+from .search import parse_search_query
 
 
 class LocationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = get_user_model().objects.create_user(
+            username="map_owner",
+            phone="+992900000090",
+            password="test-password-123",
+        )
+        cls.dushanbe = City.objects.get(slug="dushanbe")
+        cls.khujand = City.objects.get(slug="khujand")
+
     def test_map_uses_default_city(self):
         response = self.client.get(reverse("city_map"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Душанбе")
+        self.assertContains(response, 'id="city-map" class="relative z-0')
 
     def test_city_selection_is_saved_in_session(self):
         response = self.client.post(
@@ -31,6 +53,241 @@ class LocationTests(TestCase):
         response = self.client.post(reverse("set_city"), {"city": "Неизвестный"})
         self.assertEqual(response.status_code, 400)
 
+    def test_geocode_endpoint_requires_login(self):
+        response = self.client.get(
+            reverse("geocode_location"),
+            {"city": "Душанбе", "address": "Улица Рудаки, 20"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.url.startswith(f"{reverse('login')}?next="))
+
+    @patch("listings.views.geocode_address")
+    def test_geocode_endpoint_returns_address_coordinates(self, geocode):
+        geocode.return_value = {
+            "latitude": 38.5701,
+            "longitude": 68.7899,
+            "display_name": "20, улица Рудаки, Душанбе, Таджикистан",
+        }
+        self.client.force_login(self.owner)
+
+        response = self.client.get(
+            reverse("geocode_location"),
+            {"city": "Душанбе", "address": "Улица Рудаки, 20"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["latitude"], 38.5701)
+        geocode.assert_called_once_with(
+            city=self.dushanbe,
+            address="Улица Рудаки, 20",
+        )
+
+    def test_map_shows_only_published_listings_with_coordinates_in_city(self):
+        mapped = Listing.objects.create(
+            owner=self.owner,
+            city=self.dushanbe,
+            deal_type=Listing.DealType.SALE,
+            property_type=Listing.PropertyType.APARTMENT,
+            status=Listing.Status.PUBLISHED,
+            title="Квартира с точкой на карте",
+            description="Подробное описание квартиры с точным местом на карте.",
+            price=Decimal("480000.00"),
+            address="Улица Рудаки, 20",
+            latitude=Decimal("38.570000"),
+            longitude=Decimal("68.790000"),
+        )
+        Listing.objects.create(
+            owner=self.owner,
+            city=self.dushanbe,
+            deal_type=Listing.DealType.SALE,
+            property_type=Listing.PropertyType.APARTMENT,
+            status=Listing.Status.PUBLISHED,
+            title="Квартира без точки",
+            description="Опубликованное объявление без сохранённых координат объекта.",
+            price=Decimal("390000.00"),
+            address="Улица Айни, 5",
+        )
+        Listing.objects.create(
+            owner=self.owner,
+            city=self.dushanbe,
+            deal_type=Listing.DealType.RENT,
+            property_type=Listing.PropertyType.APARTMENT,
+            status=Listing.Status.DRAFT,
+            title="Черновик с координатами",
+            description="Черновик не должен быть доступен на публичной карте.",
+            price=Decimal("3500.00"),
+            address="Улица Сомони, 7",
+            latitude=Decimal("38.580000"),
+            longitude=Decimal("68.800000"),
+        )
+
+        response = self.client.get(reverse("city_map"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["city_listings"]), [mapped])
+        self.assertEqual(response.context["unmapped_count"], 1)
+        self.assertEqual(response.context["map_listings"][0]["id"], str(mapped.public_id))
+        self.assertEqual(response.context["map_listings"][0]["price"], "480000")
+        self.assertContains(response, mapped.title)
+        self.assertNotContains(response, "Черновик с координатами")
+        self.assertContains(response, "Объявлений без точного места на карте: 1")
+
+        focused_response = self.client.get(
+            reverse("city_map"),
+            {"city": "Душанбе", "listing": mapped.public_id},
+        )
+        self.assertEqual(
+            focused_response.context["focused_listing_id"],
+            str(mapped.public_id),
+        )
+
+    def test_map_city_query_does_not_change_session_city(self):
+        listing = Listing.objects.create(
+            owner=self.owner,
+            city=self.khujand,
+            deal_type=Listing.DealType.RENT,
+            property_type=Listing.PropertyType.HOUSE,
+            status=Listing.Status.PUBLISHED,
+            title="Дом на карте Худжанда",
+            description="Просторный дом с точными координатами в Худжанде.",
+            price=Decimal("6000.00"),
+            address="Проспект Исмоили Сомони",
+            latitude=Decimal("40.285000"),
+            longitude=Decimal("69.625000"),
+        )
+
+        response = self.client.get(reverse("city_map"), {"city": "Худжанд"})
+
+        self.assertContains(response, listing.title)
+        self.assertEqual(response.context["map_city_name"], "Худжанд")
+        self.assertEqual(get_selected_city(response.wsgi_request), "Душанбе")
+
+
+@override_settings(
+    GEOCODER_URL="https://nominatim.example/search",
+    GEOCODER_USER_AGENT="Domly tests",
+    GEOCODER_TIMEOUT=3,
+)
+class GeocodingServiceTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.city = City.objects.get(slug="dushanbe")
+
+    @staticmethod
+    def provider_response(payload):
+        response = MagicMock()
+        response.__enter__.return_value = response
+        response.read.return_value = json.dumps(payload).encode("utf-8")
+        return response
+
+    @patch("listings.geocoding.urlopen")
+    def test_address_result_is_normalized_and_cached(self, urlopen):
+        response = self.provider_response(
+            [
+                {
+                    "lat": "38.570100",
+                    "lon": "68.789900",
+                    "display_name": "20, улица Рудаки, Душанбе, Таджикистан",
+                }
+            ]
+        )
+        urlopen.return_value = response
+
+        first = geocode_address(city=self.city, address="Улица Рудаки, 20")
+        second = geocode_address(city=self.city, address="Улица Рудаки, 20")
+
+        self.assertEqual(first, second)
+        self.assertEqual(first["latitude"], 38.5701)
+        self.assertEqual(first["longitude"], 68.7899)
+        request = urlopen.call_args.args[0]
+        self.assertIn("countrycodes=tj", request.full_url)
+        self.assertIn("limit=5", request.full_url)
+        self.assertIn("viewbox=", request.full_url)
+        self.assertEqual(request.get_header("User-agent"), "Domly tests")
+        urlopen.assert_called_once()
+
+    @patch("listings.geocoding._reserve_provider_request")
+    @patch("listings.geocoding.urlopen")
+    def test_address_falls_back_to_shorter_street_name_in_selected_city(
+        self,
+        urlopen,
+        reserve_provider_request,
+    ):
+        khujand = City.objects.get(slug="khujand")
+        urlopen.side_effect = [
+            self.provider_response([]),
+            self.provider_response([]),
+            self.provider_response(
+                [
+                    {
+                        "lat": "39.150000",
+                        "lon": "68.550000",
+                        "display_name": "Трасса Душанбе — Худжанд, Айни",
+                        "class": "highway",
+                        "addresstype": "road",
+                        "address": {"county": "Ноҳияи Айнӣ"},
+                    },
+                    {
+                        "lat": "40.291000",
+                        "lon": "69.631000",
+                        "display_name": "кӯчаи Айнӣ, Шаҳри Хуҷанд, Тоҷикистон",
+                        "class": "highway",
+                        "addresstype": "residential",
+                        "address": {"city": "Шаҳри Хуҷанд"},
+                    },
+                ]
+            ),
+        ]
+
+        result = geocode_address(
+            city=khujand,
+            address="Улица Садриддина Айни, 12",
+        )
+
+        self.assertEqual(result["latitude"], 40.291)
+        self.assertEqual(result["longitude"], 69.631)
+        queries = [
+            parse_qs(urlparse(call.args[0].full_url).query)["q"][0]
+            for call in urlopen.call_args_list
+        ]
+        self.assertEqual(
+            queries,
+            [
+                "Улица Садриддина Айни, 12, Худжанд, Таджикистан",
+                "Садриддина Айни, Худжанд",
+                "Айни, Худжанд",
+            ],
+        )
+        self.assertEqual(reserve_provider_request.call_count, 3)
+
+    @patch("listings.geocoding.cache.set")
+    @patch("listings.geocoding._reserve_provider_request")
+    @patch("listings.geocoding.urlopen")
+    def test_unsuccessful_address_is_only_cached_briefly(
+        self,
+        urlopen,
+        reserve_provider_request,
+        cache_set,
+    ):
+        urlopen.side_effect = [self.provider_response([]) for _ in range(3)]
+
+        result = geocode_address(
+            city=self.city,
+            address="Улица Неизвестная, 99",
+        )
+
+        self.assertIsNone(result)
+        self.assertEqual(urlopen.call_count, 2)
+        self.assertEqual(reserve_provider_request.call_count, 2)
+        self.assertEqual(cache_set.call_args.kwargs["timeout"], 60 * 5)
+
+    def test_public_provider_is_limited_to_one_uncached_request_per_second(self):
+        cache.set("geocode:nominatim:request", True, timeout=1)
+
+        with self.assertRaises(GeocodingRateLimited):
+            geocode_address(city=self.city, address="Проспект Айни, 15")
+
 
 class HelpPageTests(TestCase):
     def test_help_page_is_public_and_contains_current_guidance(self):
@@ -41,6 +298,8 @@ class HelpPageTests(TestCase):
         self.assertContains(response, "Объявления и модерация")
         self.assertContains(response, "Безопасная сделка")
         self.assertContains(response, "Восстановление пароля по подтверждённому номеру")
+        self.assertContains(response, "Снято с публикации")
+        self.assertContains(response, "Продано или сдано")
         self.assertContains(response, "data-help-search")
         self.assertNotContains(response, "Submit")
 
@@ -56,6 +315,33 @@ class HelpPageTests(TestCase):
         self.assertContains(response, "pb-16")
         self.assertContains(response, "Как пользоваться Domly?")
         self.assertNotContains(response, "Аренда и продажа недвижимости напрямую от владельцев.")
+
+
+class SmartSearchParserTests(TestCase):
+    def test_natural_query_extracts_property_rooms_price_and_city(self):
+        intent = parse_search_query(
+            "двушка до 5000 в Душанбе",
+            ("Душанбе", "Худжанд"),
+        )
+
+        self.assertEqual(intent.property_type, Listing.PropertyType.APARTMENT)
+        self.assertEqual(intent.rooms, 2)
+        self.assertEqual(intent.max_price, Decimal("5000"))
+        self.assertEqual(intent.city_name, "Душанбе")
+        self.assertEqual(intent.text_tokens, ())
+
+    def test_query_understands_deal_synonyms_typos_and_transliteration(self):
+        sale = parse_search_query("купить дом в Худжанд", ("Душанбе", "Худжанд"))
+        typo = parse_search_query("квартираа в цэнтре", ("Душанбе",))
+        latin = parse_search_query("kvartira v Dushanbe", ("Душанбе",))
+
+        self.assertEqual(sale.deal_type, Listing.DealType.SALE)
+        self.assertEqual(sale.property_type, Listing.PropertyType.HOUSE)
+        self.assertEqual(sale.city_name, "Худжанд")
+        self.assertEqual(typo.property_type, Listing.PropertyType.APARTMENT)
+        self.assertIn("цэнтре", typo.text_tokens)
+        self.assertEqual(latin.property_type, Listing.PropertyType.APARTMENT)
+        self.assertEqual(latin.city_name, "Душанбе")
 
 
 class ListingListTests(TestCase):
@@ -158,7 +444,83 @@ class ListingListTests(TestCase):
         )
 
         self.assertContains(response, self.published.title)
-        self.assertNotContains(response, self.cheaper.title)
+        titles = [listing.title for listing in response.context["page_obj"]]
+        self.assertEqual(titles[0], self.published.title)
+        self.assertIn(self.cheaper.title, titles)
+
+    def test_smart_search_applies_rooms_price_and_city_from_query(self):
+        matching = Listing.objects.create(
+            owner=self.user,
+            city=City.objects.get(slug="dushanbe"),
+            deal_type=Listing.DealType.RENT,
+            property_type=Listing.PropertyType.APARTMENT,
+            status=Listing.Status.PUBLISHED,
+            title="Уютная двушка у парка",
+            description="Светлая квартира с мебелью и хорошим ремонтом.",
+            price=Decimal("4500.00"),
+            address="Улица Бухоро",
+            rooms=2,
+        )
+        too_expensive = Listing.objects.create(
+            owner=self.user,
+            city=matching.city,
+            deal_type=Listing.DealType.RENT,
+            property_type=Listing.PropertyType.APARTMENT,
+            status=Listing.Status.PUBLISHED,
+            title="Дорогая двушка у парка",
+            description="Просторная квартира с двумя комнатами.",
+            price=Decimal("6500.00"),
+            address="Улица Бухоро",
+            rooms=2,
+        )
+
+        response = self.client.get(
+            reverse("listing_list"),
+            {"q": "двушка до 5000 в Душанбе"},
+        )
+
+        self.assertContains(response, matching.title)
+        self.assertNotContains(response, too_expensive.title)
+        self.assertEqual(response.context["result_city"], "Душанбе")
+        self.assertEqual(response.context["sort"], "relevance")
+        self.assertContains(response, "Поняли запрос")
+
+    def test_smart_search_finds_typo_and_transliterated_query(self):
+        typo_response = self.client.get(
+            reverse("listing_list"),
+            {"q": "квартираа в цэнтре"},
+        )
+        latin_response = self.client.get(
+            reverse("listing_list"),
+            {"q": "kvartira v tsentre"},
+        )
+
+        self.assertContains(typo_response, self.published.title)
+        self.assertNotContains(typo_response, self.cheaper.title)
+        self.assertContains(latin_response, self.published.title)
+
+    def test_query_can_override_city_and_default_property_type(self):
+        house = Listing.objects.create(
+            owner=self.user,
+            city=City.objects.get(slug="khujand"),
+            deal_type=Listing.DealType.SALE,
+            property_type=Listing.PropertyType.HOUSE,
+            status=Listing.Status.PUBLISHED,
+            title="Дом в центре Худжанда",
+            description="Просторный дом для семьи в удобном районе города.",
+            price=Decimal("700000.00"),
+            address="Проспект Исмоили Сомони",
+        )
+
+        response = self.client.get(
+            reverse("listing_list"),
+            {"q": "купить дом в Худжанд"},
+        )
+
+        self.assertContains(response, house.title)
+        self.assertEqual(response.context["deal_type"], Listing.DealType.SALE)
+        self.assertEqual(response.context["property_type"], Listing.PropertyType.HOUSE)
+        self.assertEqual(response.context["result_city"], "Худжанд")
 
     def test_price_sorting_is_applied(self):
         response = self.client.get(reverse("listing_list"), {"sort": "price_asc"})
@@ -197,6 +559,24 @@ class ListingListTests(TestCase):
         self.assertContains(response, "data-mobile-filter-toggle")
         self.assertContains(response, 'id="mobile-filter-panel"')
         self.assertContains(response, "Дополнительные фильтры")
+        self.assertContains(
+            response,
+            '<select name="city" aria-label="Город"',
+            count=2,
+        )
+        self.assertContains(response, ">Новые</option>")
+
+    def test_mobile_city_filter_changes_results_without_changing_session_city(self):
+        response = self.client.get(
+            reverse("listing_list"),
+            {"city": "Худжанд"},
+        )
+
+        self.assertContains(response, self.other_city.title)
+        self.assertNotContains(response, self.published.title)
+        self.assertEqual(response.context["result_city"], "Худжанд")
+        self.assertEqual(get_selected_city(response.wsgi_request), "Душанбе")
+        self.assertContains(response, '<option value="Худжанд" selected>Худжанд</option>', html=True)
 
     def test_authenticated_user_sees_saved_favorite_state(self):
         Favorite.objects.create(user=self.viewer, listing=self.published)
@@ -292,6 +672,8 @@ class ListingPublicationTests(TestCase):
             "price": "450000.00",
             "currency": Listing.Currency.TJS,
             "address": "Улица Рудаки, 10",
+            "latitude": "38.570000",
+            "longitude": "68.790000",
             "rooms": "2",
             "area": "68.50",
             "floor": "7",
@@ -315,6 +697,23 @@ class ListingPublicationTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Расскажите о недвижимости")
+        self.assertContains(
+            response,
+            'id="listing-location-picker" class="relative z-0',
+        )
+        self.assertContains(response, "Найти по адресу")
+        self.assertContains(response, reverse("geocode_location"))
+
+    def test_draft_can_be_saved_without_coordinates(self):
+        response = self.client.post(
+            reverse("create"),
+            self.valid_data(action="draft", latitude="", longitude=""),
+        )
+
+        self.assertRedirects(response, reverse("create"))
+        listing = Listing.objects.get()
+        self.assertIsNone(listing.latitude)
+        self.assertIsNone(listing.longitude)
 
     def test_draft_can_be_saved_without_images(self):
         response = self.client.post(
@@ -358,7 +757,34 @@ class ListingPublicationTests(TestCase):
         listing = Listing.objects.get()
         self.assertEqual(listing.status, Listing.Status.PENDING)
         self.assertIsNotNone(listing.submitted_at)
+        self.assertEqual(listing.latitude, Decimal("38.570000"))
+        self.assertEqual(listing.longitude, Decimal("68.790000"))
         self.assertEqual(ListingImage.objects.filter(listing=listing).count(), 1)
+
+    def test_publication_requires_location_on_map(self):
+        image = SimpleUploadedFile(
+            "apartment.gif",
+            (
+                b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00"
+                b"\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00"
+                b"\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
+            ),
+            content_type="image/gif",
+        )
+
+        response = self.client.post(
+            reverse("create"),
+            self.valid_data(
+                action="publish",
+                images=image,
+                latitude="",
+                longitude="",
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "укажите точное место объекта на карте")
+        self.assertFalse(Listing.objects.exists())
 
 
 class ListingDetailTests(TestCase):
@@ -402,6 +828,8 @@ class ListingDetailTests(TestCase):
             **common,
             title="Опубликованная квартира",
             status=Listing.Status.PUBLISHED,
+            latitude=Decimal("38.570000"),
+            longitude=Decimal("68.790000"),
         )
         ListingImage.objects.create(
             listing=cls.published,
@@ -435,6 +863,19 @@ class ListingDetailTests(TestCase):
         self.assertContains(response, 'data-gallery-open="0"')
         self.assertContains(response, "data-gallery-lightbox")
         self.assertContains(response, "Следующая фотография")
+
+    def test_listing_with_coordinates_links_to_focused_map_marker(self):
+        response = self.client.get(self.published.get_absolute_url())
+
+        self.assertContains(response, "Показать расположение на карте")
+        self.assertContains(response, f"listing={self.published.public_id}")
+
+    def test_listing_without_coordinates_has_no_map_link(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.get(self.pending.get_absolute_url())
+
+        self.assertNotContains(response, "Показать расположение на карте")
 
     def test_pending_listing_is_hidden_from_anonymous_users(self):
         response = self.client.get(self.pending.get_absolute_url())
@@ -569,6 +1010,9 @@ class ModerationWorkflowTests(TestCase):
         self.assertEqual(decision.moderator, self.moderator)
         self.assertEqual(decision.decision, ModerationDecision.Decision.APPROVED)
         self.assertEqual(decision.reason, "")
+        notification = Notification.objects.get(user=self.owner, listing=self.pending)
+        self.assertEqual(notification.kind, Notification.Kind.LISTING_APPROVED)
+        self.assertFalse(notification.is_read)
 
     def test_rejection_requires_reason(self):
         self.client.force_login(self.moderator)
@@ -593,6 +1037,9 @@ class ModerationWorkflowTests(TestCase):
         decision = ModerationDecision.objects.get(listing=self.pending)
         self.assertEqual(decision.decision, ModerationDecision.Decision.REJECTED)
         self.assertEqual(decision.reason, reason)
+        notification = Notification.objects.get(user=self.owner, listing=self.pending)
+        self.assertEqual(notification.kind, Notification.Kind.LISTING_REJECTED)
+        self.assertEqual(notification.message, reason)
 
     def test_processed_listing_cannot_be_moderated_again(self):
         self.client.force_login(self.moderator)
@@ -631,6 +1078,261 @@ class ModerationWorkflowTests(TestCase):
         self.client.force_login(self.regular_user)
         self.assertEqual(self.client.get(self.pending.get_absolute_url()).status_code, 404)
 
+
+class ListingReportTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        User = get_user_model()
+        cls.owner = User.objects.create_user(
+            username="report_owner", phone="+992900000070", email="report-owner@example.com", password="test-password-123"
+        )
+        cls.reporter = User.objects.create_user(
+            username="report_sender", phone="+992900000071", email="report-sender@example.com", password="test-password-123"
+        )
+        cls.regular = User.objects.create_user(
+            username="report_regular", phone="+992900000072", email="report-regular@example.com", password="test-password-123"
+        )
+        cls.moderator = User.objects.create_user(
+            username="report_moderator",
+            phone="+992900000073",
+            email="report-moderator@example.com",
+            password="test-password-123",
+            is_moderator=True,
+        )
+        cls.listing = Listing.objects.create(
+            owner=cls.owner,
+            city=City.objects.get(slug="dushanbe"),
+            deal_type=Listing.DealType.RENT,
+            property_type=Listing.PropertyType.APARTMENT,
+            status=Listing.Status.PUBLISHED,
+            title="Объявление для жалобы",
+            description="Подробное описание опубликованного объявления для проверки жалоб.",
+            price=Decimal("3000.00"),
+            address="Улица Рудаки, 12",
+        )
+
+    def report_url(self):
+        return reverse("report_listing", args=(self.listing.public_id,))
+
+    def test_authenticated_non_owner_can_submit_one_pending_report(self):
+        self.client.force_login(self.reporter)
+        data = {"reason": ListingReport.Reason.INCORRECT, "details": "Цена указана неверно."}
+
+        first = self.client.post(self.report_url(), data)
+        second = self.client.post(self.report_url(), data)
+
+        self.assertRedirects(first, self.listing.get_absolute_url())
+        self.assertRedirects(second, self.listing.get_absolute_url())
+        self.assertEqual(ListingReport.objects.count(), 1)
+        report = ListingReport.objects.get()
+        self.assertEqual(report.reporter, self.reporter)
+        self.assertEqual(report.status, ListingReport.Status.PENDING)
+
+    def test_owner_cannot_report_own_listing(self):
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            self.report_url(),
+            {"reason": ListingReport.Reason.FRAUD, "details": "Проверка запрета."},
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(ListingReport.objects.exists())
+
+    def test_other_reason_requires_details(self):
+        self.client.force_login(self.reporter)
+        response = self.client.post(
+            self.report_url(),
+            {"reason": ListingReport.Reason.OTHER, "details": "коротко"},
+        )
+        self.assertRedirects(response, f"{self.listing.get_absolute_url()}#report-listing")
+        self.assertFalse(ListingReport.objects.exists())
+
+    def test_report_queue_is_private_and_contains_no_images(self):
+        self.client.force_login(self.regular)
+        self.assertEqual(self.client.get(reverse("listing_reports")).status_code, 403)
+
+        ListingReport.objects.create(
+            listing=self.listing,
+            reporter=self.reporter,
+            reason=ListingReport.Reason.FRAUD,
+            details="Подозрительные условия оплаты.",
+        )
+        self.client.force_login(self.moderator)
+        response = self.client.get(reverse("listing_reports"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.listing.title)
+        self.assertNotContains(response, "<img")
+
+    def test_moderator_can_confirm_report_with_comment(self):
+        report = ListingReport.objects.create(
+            listing=self.listing,
+            reporter=self.reporter,
+            reason=ListingReport.Reason.FRAUD,
+        )
+        url = reverse("review_listing_report", args=(report.public_id,))
+        self.client.force_login(self.moderator)
+        self.assertEqual(self.client.get(url).status_code, 405)
+
+        response = self.client.post(
+            url,
+            {"decision": ListingReport.Status.CONFIRMED, "resolution_note": "Нарушение подтверждено."},
+        )
+
+        self.assertRedirects(response, reverse("listing_reports"))
+        report.refresh_from_db()
+        self.assertEqual(report.status, ListingReport.Status.CONFIRMED)
+        self.assertEqual(report.moderator, self.moderator)
+        self.assertIsNotNone(report.reviewed_at)
+        self.listing.refresh_from_db()
+        self.assertEqual(self.listing.status, Listing.Status.PUBLISHED)
+
+
+class ModerationBlockTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        User = get_user_model()
+        cls.owner = User.objects.create_user(
+            username="block_owner",
+            phone="+992900000090",
+            email="block-owner@example.com",
+            password="test-password-123",
+        )
+        cls.regular = User.objects.create_user(
+            username="block_regular",
+            phone="+992900000091",
+            email="block-regular@example.com",
+            password="test-password-123",
+        )
+        cls.moderator = User.objects.create_user(
+            username="block_moderator",
+            phone="+992900000092",
+            email="block-moderator@example.com",
+            password="test-password-123",
+            is_moderator=True,
+        )
+        cls.other_moderator = User.objects.create_user(
+            username="block_other_moderator",
+            phone="+992900000093",
+            email="block-other-moderator@example.com",
+            password="test-password-123",
+            is_moderator=True,
+        )
+        cls.listing = Listing.objects.create(
+            owner=cls.owner,
+            city=City.objects.get(slug="dushanbe"),
+            deal_type=Listing.DealType.RENT,
+            property_type=Listing.PropertyType.APARTMENT,
+            status=Listing.Status.PUBLISHED,
+            title="Объявление для блокировки",
+            description="Подробное описание объявления для проверки блокировки модератором.",
+            price=Decimal("3500.00"),
+            address="Улица Сомони, 15",
+        )
+
+    def block_listing_url(self):
+        return reverse("block_listing", args=(self.listing.public_id,))
+
+    def test_block_actions_require_post_and_moderator(self):
+        self.client.force_login(self.regular)
+        self.assertEqual(self.client.post(self.block_listing_url(), {"reason": "Нарушение правил", "duration": "7"}).status_code, 403)
+        self.client.force_login(self.moderator)
+        self.assertEqual(self.client.get(self.block_listing_url()).status_code, 405)
+
+    def test_listing_block_is_reversible_and_preserves_favorites(self):
+        Favorite.objects.create(user=self.regular, listing=self.listing)
+        self.client.force_login(self.moderator)
+        response = self.client.post(
+            self.block_listing_url(),
+            {"reason": "Подтверждённое нарушение правил.", "duration": "7"},
+        )
+        self.assertRedirects(response, self.listing.get_absolute_url())
+        self.listing.refresh_from_db()
+        block = ListingBlock.objects.get(listing=self.listing)
+        self.assertEqual(self.listing.status, Listing.Status.BLOCKED)
+        self.assertEqual(block.previous_status, Listing.Status.PUBLISHED)
+        self.assertIsNotNone(block.expires_at)
+        self.assertTrue(Favorite.objects.filter(user=self.regular, listing=self.listing).exists())
+        self.assertTrue(Notification.objects.filter(user=self.owner, kind=Notification.Kind.LISTING_BLOCKED).exists())
+
+        self.client.force_login(self.regular)
+        self.assertEqual(self.client.get(self.listing.get_absolute_url()).status_code, 404)
+        self.client.force_login(self.owner)
+        self.assertContains(self.client.get(self.listing.get_absolute_url()), "Подтверждённое нарушение правил")
+
+        self.client.force_login(self.moderator)
+        release = self.client.post(
+            reverse("unblock_listing", args=(block.public_id,)),
+            {"note": "Нарушение устранено."},
+        )
+        self.assertRedirects(release, reverse("moderation_blocks"))
+        self.listing.refresh_from_db()
+        block.refresh_from_db()
+        self.assertEqual(self.listing.status, Listing.Status.PUBLISHED)
+        self.assertIsNotNone(block.unblocked_at)
+        self.assertEqual(block.unblocked_by, self.moderator)
+        self.assertTrue(Notification.objects.filter(user=self.owner, kind=Notification.Kind.LISTING_UNBLOCKED).exists())
+
+    def test_account_block_disables_login_and_hides_published_listings(self):
+        self.client.force_login(self.moderator)
+        response = self.client.post(
+            reverse("block_user", args=(self.owner.username,)),
+            {"reason": "Систематическое нарушение правил.", "duration": "permanent"},
+        )
+        self.assertRedirects(response, reverse("moderation_blocks"))
+        self.owner.refresh_from_db()
+        block = UserBlock.objects.get(user=self.owner)
+        self.assertFalse(self.owner.is_active)
+        self.assertIsNone(block.expires_at)
+        self.assertFalse(Listing.objects.published().filter(pk=self.listing.pk).exists())
+        self.client.logout()
+        self.assertFalse(self.client.login(username=self.owner.username, password="test-password-123"))
+
+        self.client.force_login(self.moderator)
+        response = self.client.post(
+            reverse("unblock_user", args=(block.public_id,)),
+            {"note": "Ограничение снято после проверки."},
+        )
+        self.assertRedirects(response, reverse("moderation_blocks"))
+        self.owner.refresh_from_db()
+        self.assertTrue(self.owner.is_active)
+        self.assertTrue(Listing.objects.published().filter(pk=self.listing.pk).exists())
+        self.assertTrue(Notification.objects.filter(user=self.owner, kind=Notification.Kind.ACCOUNT_UNBLOCKED).exists())
+
+    def test_moderator_cannot_block_self_or_another_moderator(self):
+        self.client.force_login(self.moderator)
+        data = {"reason": "Недопустимая операция.", "duration": "7"}
+        self.assertEqual(self.client.post(reverse("block_user", args=(self.moderator.username,)), data).status_code, 403)
+        self.assertEqual(self.client.post(reverse("block_user", args=(self.other_moderator.username,)), data).status_code, 403)
+
+    def test_expired_blocks_are_released_by_middleware(self):
+        listing_block = ListingBlock.objects.create(
+            listing=self.listing,
+            moderator=self.moderator,
+            reason="Временная проверка.",
+            previous_status=Listing.Status.PUBLISHED,
+            expires_at=timezone.now() - timedelta(minutes=1),
+        )
+        self.listing.status = Listing.Status.BLOCKED
+        self.listing.save(update_fields=("status",))
+        user_block = UserBlock.objects.create(
+            user=self.owner,
+            moderator=self.moderator,
+            reason="Временная проверка аккаунта.",
+            was_active=True,
+            expires_at=timezone.now() - timedelta(minutes=1),
+        )
+        self.owner.is_active = False
+        self.owner.save(update_fields=("is_active",))
+
+        self.client.get(reverse("listing_list"))
+
+        self.listing.refresh_from_db()
+        self.owner.refresh_from_db()
+        listing_block.refresh_from_db()
+        user_block.refresh_from_db()
+        self.assertEqual(self.listing.status, Listing.Status.PUBLISHED)
+        self.assertTrue(self.owner.is_active)
+        self.assertIsNotNone(listing_block.unblocked_at)
+        self.assertIsNotNone(user_block.unblocked_at)
 
 class ListingEditTests(TestCase):
     @classmethod
@@ -683,6 +1385,8 @@ class ListingEditTests(TestCase):
             "price": "430000.00",
             "currency": Listing.Currency.TJS,
             "address": "Улица Рудаки, 31",
+            "latitude": "38.575000",
+            "longitude": "68.795000",
             "rooms": "2",
             "area": "66.00",
             "floor": "5",
@@ -748,6 +1452,177 @@ class ListingEditTests(TestCase):
         self.client.force_login(self.outsider)
         response = self.client.get(self.listing.get_absolute_url())
         self.assertNotContains(response, self.edit_url())
+
+
+class ListingLifecycleTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        User = get_user_model()
+        cls.owner = User.objects.create_user(
+            username="lifecycle_owner",
+            phone="+992900000080",
+            email="lifecycle-owner@example.com",
+            password="test-password-123",
+        )
+        cls.outsider = User.objects.create_user(
+            username="lifecycle_outsider",
+            phone="+992900000081",
+            email="lifecycle-outsider@example.com",
+            password="test-password-123",
+        )
+        cls.city = City.objects.get(slug="dushanbe")
+        common = {
+            "owner": cls.owner,
+            "city": cls.city,
+            "property_type": Listing.PropertyType.APARTMENT,
+            "description": "Подробное описание объявления для проверки жизненного цикла.",
+            "price": Decimal("320000.00"),
+            "address": "Проспект Рудаки, 80",
+        }
+        cls.sale_listing = Listing.objects.create(
+            **common,
+            deal_type=Listing.DealType.SALE,
+            status=Listing.Status.PUBLISHED,
+            title="Квартира для продажи и проверки статусов",
+        )
+        cls.rent_listing = Listing.objects.create(
+            **common,
+            deal_type=Listing.DealType.RENT,
+            status=Listing.Status.PUBLISHED,
+            title="Квартира для аренды и проверки статусов",
+        )
+        cls.draft_listing = Listing.objects.create(
+            **common,
+            deal_type=Listing.DealType.SALE,
+            status=Listing.Status.DRAFT,
+            title="Черновик для проверки недоступных действий",
+        )
+
+    def action_url(self, action, listing=None):
+        return reverse(
+            f"{action}_listing",
+            args=((listing or self.sale_listing).public_id,),
+        )
+
+    def test_lifecycle_routes_require_post_login_and_owner(self):
+        self.client.force_login(self.owner)
+        for action in ("archive", "restore", "complete", "delete"):
+            self.assertEqual(self.client.get(self.action_url(action)).status_code, 405)
+
+        self.client.logout()
+        archive_url = self.action_url("archive")
+        response = self.client.post(archive_url)
+        self.assertRedirects(response, f"{reverse('login')}?next={archive_url}")
+
+        self.client.force_login(self.outsider)
+        self.assertEqual(self.client.post(archive_url).status_code, 404)
+        self.sale_listing.refresh_from_db()
+        self.assertEqual(self.sale_listing.status, Listing.Status.PUBLISHED)
+
+    def test_owner_can_archive_and_restore_listing(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.post(self.action_url("archive"))
+
+        self.assertRedirects(response, self.sale_listing.get_absolute_url())
+        self.sale_listing.refresh_from_db()
+        self.assertEqual(self.sale_listing.status, Listing.Status.ARCHIVED)
+        owner_preview = self.client.get(self.sale_listing.get_absolute_url())
+        self.assertContains(owner_preview, "Снято с публикации")
+        self.assertContains(owner_preview, self.action_url("restore"))
+
+        self.client.force_login(self.outsider)
+        self.assertEqual(self.client.get(self.sale_listing.get_absolute_url()).status_code, 404)
+
+        self.client.force_login(self.owner)
+        response = self.client.post(self.action_url("restore"))
+        self.assertRedirects(response, self.sale_listing.get_absolute_url())
+        self.sale_listing.refresh_from_db()
+        self.assertEqual(self.sale_listing.status, Listing.Status.PUBLISHED)
+        self.assertIsNotNone(self.sale_listing.published_at)
+
+        self.client.force_login(self.outsider)
+        self.assertEqual(self.client.get(self.sale_listing.get_absolute_url()).status_code, 200)
+
+    def test_completed_status_is_sold_or_rented_by_deal_type(self):
+        self.client.force_login(self.owner)
+
+        self.client.post(self.action_url("complete", self.sale_listing))
+        self.client.post(self.action_url("complete", self.rent_listing))
+
+        self.sale_listing.refresh_from_db()
+        self.rent_listing.refresh_from_db()
+        self.assertEqual(self.sale_listing.status, Listing.Status.COMPLETED)
+        self.assertEqual(self.rent_listing.status, Listing.Status.COMPLETED)
+        self.assertEqual(str(self.sale_listing.status_label), "Продано")
+        self.assertEqual(str(self.rent_listing.status_label), "Сдано")
+        self.assertContains(self.client.get(self.sale_listing.get_absolute_url()), "Продано")
+        self.assertContains(self.client.get(self.rent_listing.get_absolute_url()), "Сдано")
+
+        self.client.force_login(self.outsider)
+        self.assertEqual(self.client.get(self.sale_listing.get_absolute_url()).status_code, 404)
+        self.assertEqual(self.client.get(self.rent_listing.get_absolute_url()).status_code, 404)
+
+    def test_invalid_transition_does_not_change_draft(self):
+        self.client.force_login(self.owner)
+
+        for action in ("archive", "restore", "complete"):
+            response = self.client.post(self.action_url(action, self.draft_listing))
+            self.assertRedirects(response, self.draft_listing.get_absolute_url())
+            self.draft_listing.refresh_from_db()
+            self.assertEqual(self.draft_listing.status, Listing.Status.DRAFT)
+
+    def test_soft_delete_hides_listing_and_preserves_moderation_history(self):
+        Favorite.objects.create(user=self.outsider, listing=self.sale_listing)
+        decision = ModerationDecision.objects.create(
+            listing=self.sale_listing,
+            moderator=None,
+            decision=ModerationDecision.Decision.APPROVED,
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(self.action_url("delete"))
+
+        self.assertRedirects(response, reverse("profile_listings"))
+        self.sale_listing.refresh_from_db()
+        self.assertEqual(self.sale_listing.status, Listing.Status.DELETED)
+        self.assertIsNotNone(self.sale_listing.deleted_at)
+        self.assertFalse(Favorite.objects.filter(listing=self.sale_listing).exists())
+        self.assertTrue(ModerationDecision.objects.filter(pk=decision.pk).exists())
+        self.assertEqual(self.client.get(self.sale_listing.get_absolute_url()).status_code, 404)
+        self.assertEqual(
+            self.client.get(reverse("edit_listing", args=(self.sale_listing.public_id,))).status_code,
+            404,
+        )
+        self.assertNotContains(self.client.get(reverse("profile_listings")), self.sale_listing.title)
+
+    def test_archived_favorite_returns_after_restore(self):
+        Favorite.objects.create(user=self.outsider, listing=self.sale_listing)
+        self.client.force_login(self.owner)
+        self.client.post(self.action_url("archive"))
+
+        self.client.force_login(self.outsider)
+        self.assertNotContains(self.client.get(reverse("favorites")), self.sale_listing.title)
+
+        self.client.force_login(self.owner)
+        self.client.post(self.action_url("restore"))
+
+        self.client.force_login(self.outsider)
+        self.assertContains(self.client.get(reverse("favorites")), self.sale_listing.title)
+
+    def test_owner_sees_management_controls_only_on_own_listing(self):
+        self.client.force_login(self.owner)
+        response = self.client.get(self.sale_listing.get_absolute_url())
+        self.assertContains(response, "Управление объявлением")
+        self.assertContains(response, self.action_url("archive"))
+        self.assertContains(response, self.action_url("complete"))
+        self.assertContains(response, self.action_url("delete"))
+        self.assertContains(response, "data-listing-action-dialog")
+
+        self.client.force_login(self.outsider)
+        response = self.client.get(self.sale_listing.get_absolute_url())
+        self.assertNotContains(response, "Управление объявлением")
+        self.assertNotContains(response, "data-listing-action-dialog")
 
 
 class FavoriteTests(TestCase):

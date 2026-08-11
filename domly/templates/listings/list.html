@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}Недвижимость в {{ selected_city }} — Domly{% endblock %}
+{% block title %}Недвижимость в {{ result_city|default:selected_city }} — Domly{% endblock %}
 
 {% block content %}
 <section class="w-full min-w-0 py-5 md:py-8">
     <div class="mb-6">
-        <h1 class="text-2xl font-semibold tracking-tight text-gray-950 md:text-3xl">Недвижимость в {{ selected_city }}</h1>
+        <h1 class="text-2xl font-semibold tracking-tight text-gray-950 md:text-3xl">{% if query %}Результаты поиска{% else %}Недвижимость в {{ result_city|default:selected_city }}{% endif %}</h1>
+        {% if query %}<p class="mt-1 text-sm text-gray-600">По запросу «{{ query }}» · {{ result_city|default:selected_city }}</p>{% endif %}
         <a href="{% url 'help' %}" class="mt-1 inline-block text-sm text-gray-900 transition hover:text-gray-950">
             {% translate "Как пользоваться Domly? Ответы тут — в разделе помощи." %}
         </a>
@@ -70,8 +71,8 @@
     </div>
 
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p class="text-sm text-gray-500">Найдено: <span class="font-medium text-gray-900">{{ listing_count }}</span></p>
-        <a href="{% url 'city_map' %}" class="inline-flex items-center gap-2 text-sm font-medium text-gray-700 transition hover:text-black">
+        <div><p class="text-sm text-gray-500">Найдено: <span class="font-medium text-gray-900">{{ listing_count }}</span></p>{% if search_interpretation %}<p class="mt-1 text-xs text-gray-500">Поняли запрос: {% for item in search_interpretation %}<span class="font-medium text-gray-700">{{ item }}</span>{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}</div>
+        <a href="{% url 'city_map' %}?city={{ result_city|urlencode }}" class="inline-flex items-center gap-2 text-sm font-medium text-gray-700 transition hover:text-black">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6 7-12a7 7 0 1 0-14 0c0 6 7 12 7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
             Смотреть на карте
         </a>

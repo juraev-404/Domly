@@ -119,9 +119,8 @@ def message_list(request):
 @require_POST
 def start_conversation(request, public_id):
     listing = get_object_or_404(
-        Listing.objects.select_related("owner"),
+        Listing.objects.published().select_related("owner"),
         public_id=public_id,
-        status=Listing.Status.PUBLISHED,
     )
     try:
         conversation, _ = get_or_create_listing_conversation(

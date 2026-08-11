@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import RegistrationAttempt, User
+from .models import Notification, RegistrationAttempt, User, UserBlock
 
 
 @admin.register(User)
@@ -46,3 +46,21 @@ class RegistrationAttemptAdmin(admin.ModelAdmin):
         "failed_attempts",
         "request_ip",
     )
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("user", "kind", "listing", "is_read", "created_at")
+    list_filter = ("kind", "is_read", "created_at")
+    search_fields = ("user__username", "listing__title", "message")
+    readonly_fields = ("public_id", "created_at", "read_at")
+    list_select_related = ("user", "listing")
+
+
+@admin.register(UserBlock)
+class UserBlockAdmin(admin.ModelAdmin):
+    list_display = ("user", "moderator", "blocked_at", "expires_at", "unblocked_at")
+    list_filter = ("blocked_at", "expires_at", "unblocked_at")
+    search_fields = ("user__username", "reason", "unblock_note")
+    readonly_fields = ("public_id", "blocked_at", "unblocked_at")
+    list_select_related = ("user", "moderator", "unblocked_by")

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Уведомления" %} — Domly{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-3xl py-6 md:py-10">
+    <div class="flex items-center justify-between gap-4">
+        <div><h1 class="text-3xl font-semibold tracking-tight text-gray-950">{% translate "Уведомления" %}</h1><p class="mt-1 text-sm text-gray-500">{% translate "Здесь появляются решения по вашим объявлениям." %}</p></div>
+        {% if unread_notification_count %}<form method="post" action="{% url 'mark_all_notifications_read' %}">{% csrf_token %}<button class="text-sm font-medium text-gray-700 hover:text-black">{% translate "Прочитать все" %}</button></form>{% endif %}
+    </div>
+    {% if page_obj %}
+        <div class="mt-6 space-y-3">
+            {% for notification in page_obj %}
+                <article class="rounded-2xl border {% if notification.is_read %}border-gray-200 bg-white{% else %}border-green-200 bg-green-50{% endif %} p-5">
+                    <div class="flex items-start gap-3"><span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full {% if notification.kind == 'listing_approved' %}bg-green-500{% else %}bg-red-500{% endif %}"></span><div class="min-w-0 flex-1"><h2 class="font-semibold text-gray-950">{{ notification.get_kind_display }}</h2>{% if notification.listing %}<p class="mt-1 truncate text-sm text-gray-700">{{ notification.listing.title }}</p>{% endif %}{% if notification.message %}<p class="mt-2 whitespace-pre-line text-sm leading-6 text-gray-600">{{ notification.message }}</p>{% endif %}<time class="mt-2 block text-xs text-gray-400">{{ notification.created_at|date:"d.m.Y H:i" }}</time></div></div>
+                    {% if notification.listing and notification.listing.status != 'deleted' %}<form method="post" action="{% url 'mark_notification_read' notification.public_id %}" class="mt-4">{% csrf_token %}<button class="text-sm font-medium text-gray-900 hover:underline">{% if notification.is_read %}{% translate "Открыть объявление" %}{% else %}{% translate "Прочитать и открыть" %}{% endif %}</button></form>{% elif not notification.is_read %}<form method="post" action="{% url 'mark_notification_read' notification.public_id %}" class="mt-4">{% csrf_token %}<button class="text-sm font-medium text-gray-900 hover:underline">{% translate "Отметить прочитанным" %}</button></form>{% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="mt-8 rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-14 text-center"><h2 class="text-xl font-semibold">{% translate "Уведомлений пока нет" %}</h2><p class="mt-2 text-gray-500">{% translate "Мы сообщим здесь о результате модерации объявления." %}</p></div>
+    {% endif %}
+</section>
+{% endblock %}

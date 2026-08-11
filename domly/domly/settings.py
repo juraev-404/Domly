@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -48,6 +49,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'domly.middleware.ReleaseExpiredModerationBlocksMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -67,6 +69,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'listings.context_processors.location',
                 'chat.context_processors.unread_messages',
+                'users.context_processors.unread_notifications',
             ],
         },
     },
@@ -141,6 +144,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/'
+
+# Address geocoding is routed through the server so the provider can be changed
+# without updating the website or a future mobile application.
+GEOCODER_URL = os.getenv(
+    'GEOCODER_URL',
+    'https://nominatim.openstreetmap.org/search',
+)
+GEOCODER_USER_AGENT = os.getenv('GEOCODER_USER_AGENT', 'Domly/0.1')
+GEOCODER_TIMEOUT = float(os.getenv('GEOCODER_TIMEOUT', '5'))
 
 
 # Default primary key field type

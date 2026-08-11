@@ -15,17 +15,18 @@
             <p class="mt-1 text-xs text-gray-400">На Domly с {{ user.date_joined|date:"m.Y" }}</p>
         </div>
         {% if active_tab == "profile" %}
-            <form action="{% url 'logout' %}" method="post" data-logout-form class="ml-auto flex shrink-0 md:hidden">
-                {% csrf_token %}
-                <button type="submit" title="Выход из аккаунта" aria-label="{% translate 'Выйти из аккаунта' %}" class="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-red-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M3 21h18"></path>
-                        <path d="M6 21V3h9v4"></path>
-                        <path d="M16 17l5-5-5-5"></path>
-                        <path d="M21 12H9"></path>
-                    </svg>
-                </button>
-            </form>
+            <div class="ml-auto flex shrink-0 items-center gap-1 md:hidden">
+                <a href="{% url 'notifications' %}" title="{% translate 'Уведомления' %}" class="relative flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
+                    {% if unread_notification_count %}<span class="absolute right-0 top-0 min-w-[16px] rounded-full bg-red-500 px-1 text-center text-[9px] font-semibold leading-4 text-white">{% if unread_notification_count > 99 %}99+{% else %}{{ unread_notification_count }}{% endif %}</span>{% endif %}
+                </a>
+                <form action="{% url 'logout' %}" method="post" data-logout-form class="flex">
+                    {% csrf_token %}
+                    <button type="submit" title="Выход из аккаунта" aria-label="{% translate 'Выйти из аккаунта' %}" class="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-red-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18"></path><path d="M6 21V3h9v4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>
+                    </button>
+                </form>
+            </div>
         {% endif %}
     </div>
 

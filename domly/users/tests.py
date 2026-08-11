@@ -5,7 +5,56 @@ from django.urls import reverse
 
 from listings.models import City, Favorite, Listing
 
-from .models import RegistrationAttempt, User
+from .models import Notification, RegistrationAttempt, User
+
+
+class NotificationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            username="notification_user", phone="+992900000080", email="notification-user@example.com", password="test-password-123"
+        )
+        cls.other = User.objects.create_user(
+            username="notification_other", phone="+992900000081", email="notification-other@example.com", password="test-password-123"
+        )
+        cls.listing = Listing.objects.create(
+            owner=cls.user,
+            city=City.objects.get(slug="dushanbe"),
+            deal_type=Listing.DealType.RENT,
+            property_type=Listing.PropertyType.APARTMENT,
+            status=Listing.Status.PUBLISHED,
+            title="Объявление с уведомлением",
+            description="Достаточно подробное описание объекта для тестирования уведомлений.",
+            price="2500.00",
+            address="Улица Айни, 8",
+        )
+
+    def test_user_sees_only_own_notifications_and_unread_count(self):
+        own = Notification.objects.create(
+            user=self.user, listing=self.listing, kind=Notification.Kind.LISTING_APPROVED
+        )
+        Notification.objects.create(
+            user=self.other, listing=self.listing, kind=Notification.Kind.LISTING_REJECTED
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("notifications"))
+        self.assertContains(response, own.get_kind_display())
+        self.assertNotContains(response, Notification.Kind.LISTING_REJECTED.label)
+        self.assertEqual(response.context["unread_notification_count"], 1)
+
+    def test_read_action_is_post_only_and_scoped_to_owner(self):
+        own = Notification.objects.create(
+            user=self.user, listing=self.listing, kind=Notification.Kind.LISTING_APPROVED
+        )
+        url = reverse("mark_notification_read", args=(own.public_id,))
+        self.client.force_login(self.other)
+        self.assertEqual(self.client.post(url).status_code, 404)
+        self.client.force_login(self.user)
+        self.assertEqual(self.client.get(url).status_code, 405)
+        self.assertRedirects(self.client.post(url), self.listing.get_absolute_url())
+        own.refresh_from_db()
+        self.assertTrue(own.is_read)
+        self.assertIsNotNone(own.read_at)
 
 
 class AuthenticationTests(TestCase):

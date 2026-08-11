@@ -39,7 +39,7 @@ class City(models.Model):
 
 class ListingQuerySet(models.QuerySet):
     def published(self):
-        return self.filter(status=Listing.Status.PUBLISHED)
+        return self.filter(status=Listing.Status.PUBLISHED, owner__is_active=True)
 
 
 class Listing(models.Model):
@@ -61,6 +61,8 @@ class Listing(models.Model):
         REJECTED = "rejected", "Отклонено"
         ARCHIVED = "archived", "Снято с публикации"
         COMPLETED = "completed", "Сделка завершена"
+        BLOCKED = "blocked", "Заблокировано модератором"
+        DELETED = "deleted", "Удалено"
 
     class Currency(models.TextChoices):
         TJS = "TJS", "Сомони"
@@ -127,6 +129,7 @@ class Listing(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     submitted_at = models.DateTimeField(blank=True, null=True, db_index=True)
     published_at = models.DateTimeField(blank=True, null=True)
+    deleted_at = models.DateTimeField(blank=True, null=True, db_index=True)
 
     objects = ListingQuerySet.as_manager()
 
@@ -172,6 +175,14 @@ class Listing(models.Model):
 
     def get_absolute_url(self):
         return reverse("listing_detail", kwargs={"public_id": self.public_id})
+
+    @property
+    def status_label(self):
+        if self.status == self.Status.COMPLETED:
+            if self.deal_type == self.DealType.SALE:
+                return _("Продано")
+            return _("Сдано")
+        return self.get_status_display()
 
 
 def listing_image_upload_to(instance, filename):
@@ -266,3 +277,123 @@ class ModerationDecision(models.Model):
 
     def __str__(self):
         return f"{self.listing}: {self.get_decision_display()}"
+
+
+class ListingReport(models.Model):
+    class Reason(models.TextChoices):
+        FRAUD = "fraud", _("Мошенничество")
+        DUPLICATE = "duplicate", _("Дубликат")
+        INCORRECT = "incorrect", _("Неверная информация")
+        UNAVAILABLE = "unavailable", _("Объект уже недоступен")
+        OFFENSIVE = "offensive", _("Недопустимое содержание")
+        OTHER = "other", _("Другое")
+
+    class Status(models.TextChoices):
+        PENDING = "pending", _("На рассмотрении")
+        CONFIRMED = "confirmed", _("Подтверждена")
+        DISMISSED = "dismissed", _("Отклонена")
+
+    public_id = models.UUIDField(default=uuid4, editable=False, unique=True)
+    listing = models.ForeignKey(
+        Listing,
+        on_delete=models.CASCADE,
+        related_name="reports",
+    )
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="listing_reports",
+    )
+    reason = models.CharField(max_length=16, choices=Reason.choices)
+    details = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+    )
+    moderator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="reviewed_listing_reports",
+    )
+    resolution_note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ("created_at", "pk")
+        verbose_name = _("жалоба на объявление")
+        verbose_name_plural = _("жалобы на объявления")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("listing", "reporter"),
+                condition=Q(status="pending"),
+                name="listing_report_one_pending",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("status", "created_at"),
+                name="report_status_created_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.listing}: {self.get_reason_display()}"
+
+
+class ListingBlock(models.Model):
+    public_id = models.UUIDField(default=uuid4, editable=False, unique=True)
+    listing = models.ForeignKey(
+        Listing,
+        on_delete=models.CASCADE,
+        related_name="moderation_blocks",
+    )
+    moderator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="created_listing_blocks",
+    )
+    reason = models.TextField()
+    previous_status = models.CharField(max_length=12, choices=Listing.Status.choices)
+    blocked_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(blank=True, null=True, db_index=True)
+    unblocked_at = models.DateTimeField(blank=True, null=True, db_index=True)
+    unblocked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="released_listing_blocks",
+    )
+    unblock_note = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ("-blocked_at", "-pk")
+        verbose_name = _("блокировка объявления")
+        verbose_name_plural = _("блокировки объявлений")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("listing",),
+                condition=Q(unblocked_at__isnull=True),
+                name="listing_one_active_block",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("unblocked_at", "expires_at"),
+                name="listing_block_expiry_idx",
+            ),
+        ]
+
+    @property
+    def is_active(self):
+        return self.unblocked_at is None
+
+    def __str__(self):
+        return f"{self.listing}: {self.reason[:60]}"

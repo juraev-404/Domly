@@ -15,6 +15,12 @@
                 {% blocktranslate count counter=pending_count %}На проверке {{ counter }} объявление{% plural %}На проверке {{ counter }} объявлений{% endblocktranslate %}
             </p>
         </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{% url 'listing_reports' %}" class="inline-flex items-center rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 transition hover:border-gray-500">
+                {% translate "Жалобы" %}{% if pending_report_count %}<span class="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">{{ pending_report_count }}</span>{% endif %}
+            </a>
+            <a href="{% url 'moderation_blocks' %}" class="inline-flex items-center rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 transition hover:border-gray-500">{% translate "Блокировки" %}</a>
+        </div>
     </div>
 
     {% if page_obj %}

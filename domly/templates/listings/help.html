@@ -98,6 +98,18 @@
                     <h3 class="font-semibold text-gray-950">{% translate "Опубликовано" %}</h3>
                     <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Опубликованное объявление видно в каталоге. После изменения оно снова отправляется на модерацию." %}</p>
                 </article>
+                <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
+                    <h3 class="font-semibold text-gray-950">{% translate "Снято с публикации" %}</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Автор может временно скрыть опубликованное объявление из каталога, а затем восстановить публикацию из личного кабинета." %}</p>
+                </article>
+                <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
+                    <h3 class="font-semibold text-gray-950">{% translate "Продано или сдано" %}</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "После завершения сделки объявление исчезает из поиска. Если объект снова станет доступен, публикацию можно восстановить." %}</p>
+                </article>
+                <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
+                    <h3 class="font-semibold text-gray-950">{% translate "Удаление" %}</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Удалённое объявление исчезает из каталога и личного кабинета. Самостоятельно отменить удаление нельзя." %}</p>
+                </article>
             </div>
         </section>
 
@@ -159,7 +171,7 @@
                         {% translate "Почему моё объявление не видно в каталоге?" %}
                         <span class="text-xl transition group-open:rotate-45" aria-hidden="true">+</span>
                     </summary>
-                    <p class="mt-3 text-sm leading-6 text-gray-600">{% translate "Проверьте его статус в личном кабинете. Черновик, объявление на модерации или отклонённое объявление другим пользователям не показывается." %}</p>
+                    <p class="mt-3 text-sm leading-6 text-gray-600">{% translate "Проверьте его статус в личном кабинете. Черновик, объявление на модерации, отклонённое, снятое, проданное или сданное объявление другим пользователям не показывается." %}</p>
                 </details>
                 <details data-help-item class="group rounded-2xl border border-gray-200 bg-white p-5">
                     <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-gray-950">

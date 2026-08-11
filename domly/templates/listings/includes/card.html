@@ -17,7 +17,7 @@
 
             {% if listing.status != "published" %}
                 <span class="absolute left-3 top-3 rounded-full bg-black/75 px-2.5 py-1 text-xs font-medium text-white">
-                    {{ listing.get_status_display }}
+                    {{ listing.status_label }}
                 </span>
             {% endif %}
         </div>

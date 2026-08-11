@@ -12,4 +12,7 @@ urlpatterns = [
     path("profile/drafts/", views.profile_drafts_view, name="profile_drafts"),
     path("author/<str:username>/", views.public_profile_view, name="public_profile"),
     path("favorites/", views.favorites_view, name="favorites"),
+    path("notifications/", views.notifications_view, name="notifications"),
+    path("notifications/read-all/", views.mark_all_notifications_read, name="mark_all_notifications_read"),
+    path("notifications/<uuid:public_id>/read/", views.mark_notification_read, name="mark_notification_read"),
 ]

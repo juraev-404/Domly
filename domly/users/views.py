@@ -16,7 +16,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from listings.models import Favorite, Listing
 
 from .forms import LoginForm, ProfileForm, RegistrationForm, VerificationCodeForm
-from .models import RegistrationAttempt, User
+from .models import Notification, RegistrationAttempt, User
 from .services import generate_verification_code, send_verification_code
 
 
@@ -146,12 +146,16 @@ def verify_view(request):
 
 def _profile_context(user, active_tab, form=None):
     listings = (
-        Listing.objects.filter(owner=user)
+        Listing.objects.filter(owner=user).exclude(status=Listing.Status.DELETED)
         .select_related("city", "owner")
         .prefetch_related("images")
     )
     favorites = (
-        Favorite.objects.filter(user=user)
+        Favorite.objects.filter(
+            user=user,
+            listing__status=Listing.Status.PUBLISHED,
+            listing__owner__is_active=True,
+        )
         .select_related("listing__city", "listing__owner")
         .prefetch_related("listing__images")
     )
@@ -254,3 +258,41 @@ def favorites_view(request):
         "users/profile.html",
         _profile_context(request.user, "favorites"),
     )
+
+
+@login_required
+def notifications_view(request):
+    notifications = Notification.objects.filter(user=request.user).select_related("listing")
+    paginator = Paginator(notifications, 20)
+    return render(
+        request,
+        "users/notifications.html",
+        {"page_obj": paginator.get_page(request.GET.get("page"))},
+    )
+
+
+@login_required
+@require_POST
+def mark_notification_read(request, public_id):
+    notification = get_object_or_404(
+        Notification,
+        public_id=public_id,
+        user=request.user,
+    )
+    if not notification.is_read:
+        notification.is_read = True
+        notification.read_at = timezone.now()
+        notification.save(update_fields=("is_read", "read_at"))
+    if notification.listing and notification.listing.status != Listing.Status.DELETED:
+        return redirect(notification.listing.get_absolute_url())
+    return redirect("notifications")
+
+
+@login_required
+@require_POST
+def mark_all_notifications_read(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(
+        is_read=True,
+        read_at=timezone.now(),
+    )
+    return redirect("notifications")

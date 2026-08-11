@@ -20,12 +20,19 @@
         <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">Цена до</span>
         <input type="number" min="0" step="1" name="max_price" value="{{ max_price }}" placeholder="Цена до" aria-label="Цена до" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-gray-500">
     </label>
-    <label class="col-span-2 block md:col-span-1">
+    <label class="block md:hidden">
+        <span class="sr-only">Город</span>
+        <select name="city" aria-label="Город" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-gray-500">
+            {% for city in search_cities %}<option value="{{ city }}" {% if result_city == city %}selected{% endif %}>{{ city }}</option>{% endfor %}
+        </select>
+    </label>
+    <label class="block md:col-span-1">
         <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">Сортировка</span>
         <select name="sort" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-gray-500">
-            <option value="newest" {% if sort == "newest" %}selected{% endif %}>сначала новые</option>
-            <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>сначала дешевле</option>
-            <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>сначала дороже</option>
+            {% if query %}<option value="relevance" {% if sort == "relevance" %}selected{% endif %}>Подходящие</option>{% endif %}
+            <option value="newest" {% if sort == "newest" %}selected{% endif %}>Новые</option>
+            <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>Дешевле</option>
+            <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>Дороже</option>
         </select>
     </label>
 </div>

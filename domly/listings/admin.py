@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import City, Favorite, Listing, ListingImage, ModerationDecision
+from .models import City, Favorite, Listing, ListingBlock, ListingImage, ListingReport, ModerationDecision
 
 
 class ListingImageInline(admin.TabularInline):
@@ -27,6 +27,7 @@ class ListingAdmin(admin.ModelAdmin):
         "price",
         "currency",
         "status",
+        "deleted_at",
         "created_at",
     )
     list_filter = ("status", "deal_type", "property_type", "currency", "city")
@@ -37,6 +38,7 @@ class ListingAdmin(admin.ModelAdmin):
         "updated_at",
         "submitted_at",
         "published_at",
+        "deleted_at",
     )
     autocomplete_fields = ("owner", "city")
     inlines = (ListingImageInline,)
@@ -64,3 +66,22 @@ class ModerationDecisionAdmin(admin.ModelAdmin):
     autocomplete_fields = ("listing", "moderator")
     readonly_fields = ("created_at",)
     list_select_related = ("listing", "moderator")
+
+
+@admin.register(ListingReport)
+class ListingReportAdmin(admin.ModelAdmin):
+    list_display = ("listing", "reason", "status", "reporter", "moderator", "created_at")
+    list_filter = ("status", "reason", "created_at")
+    search_fields = ("listing__title", "reporter__username", "details", "resolution_note")
+    autocomplete_fields = ("listing", "reporter", "moderator")
+    readonly_fields = ("public_id", "created_at", "reviewed_at")
+    list_select_related = ("listing", "reporter", "moderator")
+
+
+@admin.register(ListingBlock)
+class ListingBlockAdmin(admin.ModelAdmin):
+    list_display = ("listing", "moderator", "blocked_at", "expires_at", "unblocked_at")
+    list_filter = ("blocked_at", "expires_at", "unblocked_at")
+    search_fields = ("listing__title", "listing__owner__username", "reason", "unblock_note")
+    readonly_fields = ("public_id", "blocked_at", "unblocked_at")
+    list_select_related = ("listing", "moderator", "unblocked_by")
