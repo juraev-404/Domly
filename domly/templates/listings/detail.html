@@ -222,7 +222,7 @@
 
             <section class="mt-8 border-t border-gray-200 pt-7">
                 <h2 class="text-xl font-semibold text-gray-950">{% translate "Характеристики" %}</h2>
-                <dl class="mt-5 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
+                <dl data-listing-characteristics class="mt-5 grid grid-cols-2 gap-x-6 gap-y-5 px-4 sm:grid-cols-3 sm:px-0">
                     <div>
                         <dt class="text-sm text-gray-500">{% translate "Тип" %}</dt>
                         <dd class="mt-1 font-medium text-gray-950">{{ listing.get_property_type_display }}</dd>

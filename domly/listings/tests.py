@@ -42,6 +42,8 @@ class LocationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Душанбе")
         self.assertContains(response, 'id="city-map" class="relative z-0')
+        self.assertContains(response, "map.attributionControl.setPrefix(false)")
+        self.assertContains(response, ".leaflet-control-attribution")
 
     def test_city_selection_is_saved_in_session(self):
         response = self.client.post(
@@ -311,6 +313,10 @@ class GeocodingServiceTests(TestCase):
 
 
 class HelpPageTests(TestCase):
+    def setUp(self):
+        translation.activate("ru")
+        self.addCleanup(translation.deactivate)
+
     def test_help_page_is_public_and_contains_current_guidance(self):
         response = self.client.get(reverse("help"))
 
@@ -321,6 +327,12 @@ class HelpPageTests(TestCase):
         self.assertContains(response, "получите шестизначный код на подтверждённый email")
         self.assertContains(response, "Снято с публикации")
         self.assertContains(response, "Продано или сдано")
+        self.assertContains(response, "Запомнить меня")
+        self.assertContains(response, "Язык и тема")
+        self.assertContains(response, "Адрес и карта")
+        self.assertContains(response, "Жалобы и блокировки")
+        self.assertContains(response, "Умный поиск")
+        self.assertContains(response, "новое сообщение снова покажет диалог")
         self.assertContains(response, "data-help-search")
         self.assertNotContains(response, "Submit")
 
@@ -335,6 +347,8 @@ class HelpPageTests(TestCase):
         self.assertContains(response, "data-site-footer")
         self.assertContains(response, "pb-16")
         self.assertContains(response, "Как пользоваться Domly?")
+        self.assertContains(response, "data-home-help-link")
+        self.assertContains(response, "border-green-200")
         self.assertNotContains(response, "Аренда и продажа недвижимости напрямую от владельцев.")
 
 
@@ -769,6 +783,8 @@ class ListingPublicationTests(TestCase):
         cls.city = City.objects.get(slug="dushanbe")
 
     def setUp(self):
+        translation.activate("ru")
+        self.addCleanup(translation.deactivate)
         self.media_root = TemporaryDirectory()
         self.addCleanup(self.media_root.cleanup)
         self.media_settings = override_settings(MEDIA_ROOT=self.media_root.name)
@@ -826,6 +842,7 @@ class ListingPublicationTests(TestCase):
         )
         self.assertContains(response, "Найти по адресу")
         self.assertContains(response, reverse("geocode_location"))
+        self.assertContains(response, "map.attributionControl.setPrefix(false)")
 
     def test_draft_can_be_saved_without_coordinates(self):
         response = self.client.post(
@@ -975,6 +992,11 @@ class ListingDetailTests(TestCase):
             title="Квартира на модерации",
             status=Listing.Status.PENDING,
         )
+
+    def setUp(self):
+        translation.activate("ru")
+        self.addCleanup(translation.deactivate)
+
     def test_published_listing_is_visible_to_everyone(self):
         response = self.client.get(self.published.get_absolute_url())
 
@@ -983,6 +1005,8 @@ class ListingDetailTests(TestCase):
         self.assertContains(response, self.published.contact_phone)
         self.assertNotContains(response, self.owner.phone)
         self.assertContains(response, "/media/listings/test/apartment.jpg")
+        self.assertContains(response, "data-listing-characteristics")
+        self.assertContains(response, "px-4 sm:grid-cols-3 sm:px-0")
 
     def test_gallery_has_mobile_slider_and_desktop_lightbox(self):
         response = self.client.get(self.published.get_absolute_url())

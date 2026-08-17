@@ -3,6 +3,20 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+    .leaflet-control-attribution {
+        padding: 1px 4px;
+        font-size: 9px;
+        line-height: 1.2;
+    }
+    @media (max-width: 640px) {
+        .leaflet-control-attribution {
+            max-width: 170px;
+            font-size: 8px;
+            text-align: right;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block title %}{% if is_edit %}{% translate "Редактирование объявления" %}{% else %}{% translate "Новое объявление" %}{% endif %} — Domly{% endblock %}
@@ -202,6 +216,7 @@
             : [initialCity.latitude, initialCity.longitude],
         hasInitialPoint ? Math.max(initialCity.zoom, 15) : initialCity.zoom
     );
+    map.attributionControl.setPrefix(false);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: "&copy; OpenStreetMap contributors"

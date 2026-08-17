@@ -11,7 +11,7 @@
             {% translate "Чем мы можем помочь?" %}
         </h1>
         <p class="mx-auto mt-3 max-w-2xl text-sm leading-6 text-gray-600 md:text-base">
-            {% translate "Найдите ответ о регистрации, объявлениях, модерации, поиске недвижимости и безопасности." %}
+            {% translate "Найдите ответ о регистрации, поиске, карте, объявлениях, модерации, общении и безопасности." %}
         </p>
 
         <div class="relative mx-auto mt-6 max-w-2xl text-left">
@@ -58,18 +58,22 @@
     <div class="mt-10 space-y-8">
         <section id="account" data-help-section class="scroll-mt-28" aria-labelledby="account-title">
             <h2 id="account-title" class="text-2xl font-semibold text-gray-950">{% translate "Аккаунт и вход" %}</h2>
-            <div class="mt-4 grid gap-3 md:grid-cols-3">
+            <div class="mt-4 grid gap-3 md:grid-cols-2">
                 <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
                     <h3 class="font-semibold text-gray-950">{% translate "Регистрация" %}</h3>
                     <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Укажите ник, email и пароль, затем подтвердите почту шестизначным кодом. Код действует 10 минут." %}</p>
                 </article>
                 <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
                     <h3 class="font-semibold text-gray-950">{% translate "Вход" %}</h3>
-                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Для входа используйте ник или подтверждённый email вместе с паролем." %}</p>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Для входа используйте ник или подтверждённый email вместе с паролем. Флажок «Запомнить меня» сохраняет вход после закрытия браузера." %}</p>
                 </article>
                 <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
                     <h3 class="font-semibold text-gray-950">{% translate "Профиль" %}</h3>
-                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "В личном кабинете можно изменить имя, фамилию, ник, фотографию и безопасно подтвердить новый email." %}</p>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "В профиле можно изменить личные данные и email, а также открыть свои объявления, черновики, избранное и уведомления." %}</p>
+                </article>
+                <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
+                    <h3 class="font-semibold text-gray-950">{% translate "Язык и тема" %}</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Русский выбран по умолчанию. Язык меняется флагами, а светлая и тёмная темы — кнопкой луны или солнца. Выбор сохраняется в браузере." %}</p>
                 </article>
             </div>
         </section>
@@ -82,6 +86,14 @@
                 {% endif %}
             </div>
             <div class="mt-4 grid gap-3 md:grid-cols-2">
+                <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
+                    <h3 class="font-semibold text-gray-950">{% translate "Создание объявления" %}</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Можно добавить до 10 фотографий и необязательный номер для связи. Для отправки на модерацию нужны хотя бы одна фотография и точка объекта на карте." %}</p>
+                </article>
+                <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
+                    <h3 class="font-semibold text-gray-950">{% translate "Адрес и карта" %}</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "После ввода города и адреса Domly попробует найти объект автоматически. Проверьте найденную точку и при необходимости передвиньте её вручную." %}</p>
+                </article>
                 <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
                     <h3 class="font-semibold text-gray-950">{% translate "Черновик" %}</h3>
                     <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Черновик виден только автору. Его можно найти в личном кабинете, продолжить редактирование и позже отправить на проверку." %}</p>
@@ -110,6 +122,10 @@
                     <h3 class="font-semibold text-gray-950">{% translate "Удаление" %}</h3>
                     <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Удалённое объявление исчезает из каталога и личного кабинета. Самостоятельно отменить удаление нельзя." %}</p>
                 </article>
+                <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
+                    <h3 class="font-semibold text-gray-950">{% translate "Жалобы и блокировки" %}</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "На чужое опубликованное объявление можно отправить жалобу. Её рассматривают только администраторы и модераторы; при нарушении они могут заблокировать объявление или аккаунт." %}</p>
+                </article>
             </div>
         </section>
 
@@ -122,18 +138,26 @@
                 </article>
                 <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
                     <h3 class="font-semibold text-gray-950">{% translate "Фильтры" %}</h3>
-                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Можно выбрать сделку, тип недвижимости, цену и сортировку. На мобильном дополнительные фильтры открываются иконкой в шапке." %}</p>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Можно выбрать сделку, тип недвижимости, цену, сортировку, комнаты, площадь и этаж. На мобильном дополнительные фильтры открываются иконкой в шапке." %}</p>
                 </article>
                 <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
                     <h3 class="font-semibold text-gray-950">{% translate "Избранное" %}</h3>
                     <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Нажмите на значок закладки, чтобы сохранить объявление. Повторное нажатие удалит его из избранного." %}</p>
+                </article>
+                <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
+                    <h3 class="font-semibold text-gray-950">{% translate "Умный поиск" %}</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "В строке поиска можно написать запрос обычными словами, например «двушка до 5000 в Душанбе». Domly попробует распознать город, тип, число комнат и цену." %}</p>
+                </article>
+                <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
+                    <h3 class="font-semibold text-gray-950">{% translate "Карта" %}</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "На карте показываются опубликованные объявления выбранного города. Нажмите на метку, чтобы открыть карточку, или используйте ссылку на карту со страницы объявления." %}</p>
                 </article>
             </div>
         </section>
 
         <section id="chat-help" data-help-section class="scroll-mt-28" aria-labelledby="chat-help-title">
             <h2 id="chat-help-title" class="text-2xl font-semibold text-gray-950">{% translate "Общение в чате" %}</h2>
-            <div class="mt-4 grid gap-3 md:grid-cols-3">
+            <div class="mt-4 grid gap-3 md:grid-cols-2">
                 <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
                     <h3 class="font-semibold text-gray-950">{% translate "Начать разговор" %}</h3>
                     <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Откройте объявление и нажмите «Написать владельцу». Диалог будет связан с выбранным объявлением." %}</p>
@@ -144,7 +168,11 @@
                 </article>
                 <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
                     <h3 class="font-semibold text-gray-950">{% translate "Удаление диалога" %}</h3>
-                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Удалённый диалог исчезает из вашего списка. Всегда проверяйте важную информацию до удаления переписки." %}</p>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Удаление скрывает историю только в вашем аккаунте. У другого участника она сохраняется; новое сообщение снова покажет диалог." %}</p>
+                </article>
+                <article data-help-item class="rounded-2xl border border-gray-200 bg-white p-5">
+                    <h3 class="font-semibold text-gray-950">{% translate "Непрочитанные сообщения" %}</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Счётчик у иконки чата показывает общее число непрочитанных сообщений." %}</p>
                 </article>
             </div>
         </section>
