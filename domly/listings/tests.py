@@ -843,6 +843,12 @@ class ListingPublicationTests(TestCase):
         self.assertContains(response, "Найти по адресу")
         self.assertContains(response, reverse("geocode_location"))
         self.assertContains(response, "map.attributionControl.setPrefix(false)")
+        self.assertContains(response, "data-file-picker")
+        self.assertContains(response, "data-file-picker-input")
+        self.assertContains(response, "multiple")
+        self.assertContains(response, "Выбрать фотографии")
+        self.assertContains(response, "Фотографии не выбраны")
+        self.assertContains(response, 'src="/static/file_picker.js?v=20260817"')
 
     def test_draft_can_be_saved_without_coordinates(self):
         response = self.client.post(

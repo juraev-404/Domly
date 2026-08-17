@@ -62,7 +62,10 @@
                             </label>
                         {% endif %}
                     </div>
-                    <input type="file" name="{{ profile_form.avatar.html_name }}" id="{{ profile_form.avatar.id_for_label }}" accept="image/jpeg,image/png,image/webp" class="block min-w-0 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-black file:px-3 file:py-2 file:text-white">
+                    {% translate "Выбрать фото" as avatar_picker_button %}
+                    {% translate "Фото не выбрано" as avatar_picker_empty %}
+                    {% translate "Фото выбрано" as avatar_picker_selected %}
+                    {% include "includes/file_picker.html" with field=profile_form.avatar button_label=avatar_picker_button empty_label=avatar_picker_empty selected_template=avatar_picker_selected accept="image/jpeg,image/png,image/webp" %}
                     {% for error in profile_form.avatar.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
                 </div>
                 <div class="grid gap-5 sm:grid-cols-2">
@@ -155,5 +158,8 @@
 
 {% block extra_scripts %}
     {{ block.super }}
-    {% if active_tab == "profile" %}<script src="{% static 'users/logout_dialog.js' %}" defer></script>{% endif %}
+    {% if active_tab == "profile" %}
+        <script src="{% static 'file_picker.js' %}?v=20260817" defer></script>
+        <script src="{% static 'users/logout_dialog.js' %}" defer></script>
+    {% endif %}
 {% endblock %}

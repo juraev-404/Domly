@@ -837,3 +837,21 @@ msgstr "Accept and continue"
 
 msgid "Слишком много попыток входа. Повторите попытку через 15 минут."
 msgstr "Too many sign-in attempts. Try again in 15 minutes."
+
+msgid "Выбрать фото"
+msgstr "Choose photo"
+
+msgid "Фото не выбрано"
+msgstr "No photo selected"
+
+msgid "Фото выбрано"
+msgstr "Photo selected"
+
+msgid "Выбрать фотографии"
+msgstr "Choose photos"
+
+msgid "Фотографии не выбраны"
+msgstr "No photos selected"
+
+msgid "Выбрано фотографий: {count}"
+msgstr "Photos selected: {count}"

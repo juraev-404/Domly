@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load static i18n %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
@@ -147,7 +147,17 @@
                 </div>
                 {% for error in form.remove_images.errors %}<p class="mb-3 text-sm text-red-600">{{ error }}</p>{% endfor %}
             {% endif %}
-            {% include "listings/includes/form_field.html" with field=form.images %}
+            <div>
+                <label for="{{ form.images.id_for_label }}" class="mb-2 block text-sm font-medium text-gray-800">
+                    {{ form.images.label }}
+                </label>
+                {% translate "Выбрать фотографии" as images_picker_button %}
+                {% translate "Фотографии не выбраны" as images_picker_empty %}
+                {% translate "Выбрано фотографий: {count}" as images_picker_selected %}
+                {% include "includes/file_picker.html" with field=form.images button_label=images_picker_button empty_label=images_picker_empty selected_template=images_picker_selected accept="image/jpeg,image/png,image/webp" multiple=True %}
+                {% if form.images.help_text %}<p class="mt-2 text-xs text-gray-500">{{ form.images.help_text }}</p>{% endif %}
+                {% for error in form.images.errors %}<p class="mt-2 text-sm text-red-600">{{ error }}</p>{% endfor %}
+            </div>
         </section>
 
         <div class="flex flex-col-reverse gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between md:p-5">
@@ -181,6 +191,7 @@
 
 {% block extra_scripts %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="{% static 'file_picker.js' %}?v=20260817" defer></script>
 <script>
 (() => {
     const mapElement = document.getElementById("listing-location-picker");

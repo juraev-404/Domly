@@ -557,6 +557,11 @@ class ProfileTests(TestCase):
         self.assertNotContains(response, f'href="{self.user.avatar.url}"')
         self.assertContains(response, "data-avatar-clear")
         self.assertContains(response, 'name="avatar-clear"')
+        self.assertContains(response, "data-file-picker")
+        self.assertContains(response, "data-file-picker-input")
+        self.assertContains(response, "Выбрать фото")
+        self.assertContains(response, "Фото не выбрано")
+        self.assertContains(response, 'src="/static/file_picker.js?v=20260817"')
         self.assertContains(response, "Удалить")
         self.assertNotContains(response, "Очистить")
 
@@ -731,6 +736,21 @@ class LocalizationTests(TestCase):
 
         self.assertIn('darkIcon.toggleAttribute("hidden", isDark)', theme_script)
         self.assertIn('lightIcon.toggleAttribute("hidden", !isDark)', theme_script)
+
+    def test_file_pickers_are_translated_in_profile_and_listing_form(self):
+        self.client.force_login(self.user)
+        with translation.override("en"):
+            english_profile_url = reverse("profile")
+        with translation.override("tg"):
+            tajik_create_url = reverse("create")
+
+        english_profile = self.client.get(english_profile_url)
+        self.assertContains(english_profile, "Choose photo")
+        self.assertContains(english_profile, "No photo selected")
+
+        tajik_create = self.client.get(tajik_create_url)
+        self.assertContains(tajik_create, "Интихоби аксҳо")
+        self.assertContains(tajik_create, "Аксҳо интихоб нашудаанд")
 
     def test_language_endpoint_persists_english_and_translates_navigation(self):
         with translation.override("ru"):

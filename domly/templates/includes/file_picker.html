@@ -1,0 +1,18 @@
+<label
+    data-file-picker
+    data-selected-template="{{ selected_template }}"
+    class="relative flex min-h-14 w-full cursor-pointer items-center gap-3 overflow-hidden rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm transition hover:border-gray-500 focus-within:border-gray-500 focus-within:ring-2 focus-within:ring-gray-200"
+>
+    <input
+        data-file-picker-input
+        type="file"
+        name="{{ field.html_name }}"
+        id="{{ field.id_for_label }}"
+        accept="{{ accept }}"
+        {% if multiple %}multiple{% endif %}
+        aria-describedby="{{ field.id_for_label }}_status"
+        class="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+    >
+    <span class="shrink-0 rounded-lg bg-black px-3 py-2 font-medium text-white">{{ button_label }}</span>
+    <span id="{{ field.id_for_label }}_status" data-file-picker-status aria-live="polite" class="min-w-0 flex-1 text-gray-600">{{ empty_label }}</span>
+</label>
