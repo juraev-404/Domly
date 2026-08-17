@@ -1913,7 +1913,7 @@ class SeoAndLegalTests(TestCase):
         self.assertContains(response, 'href="/static/css/app.css?v=20260817-3"')
         self.assertContains(
             response,
-            'rel="icon" type="image/png" href="/static/images/domly-icon-v3-clean-transparent.png?v=20260817-1"',
+            'rel="icon" type="image/png" href="/static/images/domly-favicon-v2.png?v=20260817-2"',
             html=False,
         )
         self.assertContains(
