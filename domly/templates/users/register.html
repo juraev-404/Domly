@@ -1,22 +1,45 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% block content %}
 <div class="flex min-h-[calc(100dvh-7.25rem)] w-full items-center justify-center py-4 md:min-h-0 md:py-8">
 <section class="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm">
-    <h1 class="text-2xl font-bold">Регистрация</h1>
-    <p class="mt-1 text-sm text-gray-500">Подтвердить номер нужно только один раз.</p>
+    <h1 class="text-2xl font-bold">{% translate "Регистрация" %}</h1>
+    <p class="mt-1 text-sm text-gray-500">{% translate "Мы отправим шестизначный код на вашу почту." %}</p>
     <form method="post" class="mt-6 space-y-4" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}<div class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ form.non_field_errors }}</div>{% endif %}
         {% for field in form %}
+            {% if field.name != "accept_terms" and field.name != "privacy_consent" %}
             <div>
                 <label for="{{ field.id_for_label }}" class="mb-1 block text-sm font-medium">{{ field.label }}</label>
                 {{ field }}
                 {% for error in field.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
             </div>
+            {% endif %}
         {% endfor %}
-        <button type="submit" class="w-full rounded-lg bg-black py-2.5 font-medium text-white hover:bg-gray-800">Получить SMS-код</button>
+        <div class="space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+            <label class="flex items-start gap-3" for="{{ form.accept_terms.id_for_label }}">
+                {{ form.accept_terms }}
+                <span>
+                    {% translate "Я принимаю" %}
+                    <a class="font-medium text-green-700 underline" href="{% url 'terms_of_use' %}" target="_blank" rel="noopener">{% translate "Пользовательское соглашение" %}</a>
+                    {% translate "и" %}
+                    <a class="font-medium text-green-700 underline" href="{% url 'publication_rules' %}" target="_blank" rel="noopener">{% translate "Правила публикации и модерации" %}</a>.
+                </span>
+            </label>
+            {% for error in form.accept_terms.errors %}<p class="text-sm text-red-600">{{ error }}</p>{% endfor %}
+            <label class="flex items-start gap-3" for="{{ form.privacy_consent.id_for_label }}">
+                {{ form.privacy_consent }}
+                <span>
+                    {% translate "Я даю согласие на сбор и обработку персональных данных, включая трансграничную передачу поставщикам инфраструктуры, на условиях" %}
+                    <a class="font-medium text-green-700 underline" href="{% url 'privacy_policy' %}" target="_blank" rel="noopener">{% translate "Политики конфиденциальности" %}</a>.
+                </span>
+            </label>
+            {% for error in form.privacy_consent.errors %}<p class="text-sm text-red-600">{{ error }}</p>{% endfor %}
+        </div>
+        <button type="submit" class="w-full rounded-lg bg-black py-2.5 font-medium text-white hover:bg-gray-800">{% translate "Получить код" %}</button>
     </form>
-    <p class="mt-4 text-center text-sm text-gray-600">Уже есть аккаунт? <a class="font-medium text-green-700" href="{% url 'login' %}">Войти</a></p>
+    <p class="mt-4 text-center text-sm text-gray-600">{% translate "Уже есть аккаунт?" %} <a class="font-medium text-green-700" href="{% url 'login' %}">{% translate "Войти" %}</a></p>
 </section>
 </div>
 {% endblock %}

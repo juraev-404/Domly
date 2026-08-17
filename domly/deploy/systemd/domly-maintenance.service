@@ -1,0 +1,15 @@
+[Unit]
+Description=Domly expired session and verification-code cleanup
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=domly
+Group=www-data
+WorkingDirectory=/srv/domly/repo/domly
+EnvironmentFile=/etc/domly/domly.env
+ExecStart=/srv/domly/venv/bin/python manage.py cleanup_email_codes
+ExecStart=/srv/domly/venv/bin/python manage.py clearsessions
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true

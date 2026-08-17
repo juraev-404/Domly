@@ -15,15 +15,28 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
+from django.conf.urls.i18n import i18n_patterns
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from .sitemaps import sitemaps
+from .views import healthcheck, robots_txt
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('robots.txt', robots_txt, name='robots_txt'),
+    path('health/', healthcheck, name='healthcheck'),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='sitemap'),
+    path('i18n/', include('django.conf.urls.i18n')),
+]
+
+urlpatterns += i18n_patterns(
     path('', include('listings.urls')),
     path('', include('users.urls')),
     path('', include('chat.urls')),
-]
+    prefix_default_language=False,
+)
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

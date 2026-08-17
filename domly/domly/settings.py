@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 from pathlib import Path
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sitemaps',
     'django.contrib.staticfiles',
     'users',
     'listings',
@@ -46,6 +48,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -67,6 +70,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'domly.context_processors.seo',
                 'listings.context_processors.location',
                 'chat.context_processors.unread_messages',
                 'users.context_processors.unread_notifications',
@@ -121,6 +125,14 @@ AUTH_PASSWORD_VALIDATORS = [
 # future Tajik (tg) and English (en) translation catalogs.
 LANGUAGE_CODE = 'ru'
 
+LANGUAGES = [
+    ('ru', _('Русский')),
+    ('tg', _('Тоҷикӣ')),
+    ('en', _('English')),
+]
+
+LOCALE_PATHS = [BASE_DIR / 'locale']
+
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
@@ -145,6 +157,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/'
 
+# Authentication throttling uses Django's cache. Development uses the default
+# in-process cache; production replaces it with shared Redis.
+LOGIN_RATE_LIMIT_ATTEMPTS = int(os.getenv('LOGIN_RATE_LIMIT_ATTEMPTS', '10'))
+LOGIN_RATE_LIMIT_WINDOW = int(os.getenv('LOGIN_RATE_LIMIT_WINDOW', '900'))
+TRUST_X_REAL_IP = False
+
 # Address geocoding is routed through the server so the provider can be changed
 # without updating the website or a future mobile application.
 GEOCODER_URL = os.getenv(
@@ -153,6 +171,39 @@ GEOCODER_URL = os.getenv(
 )
 GEOCODER_USER_AGENT = os.getenv('GEOCODER_USER_AGENT', 'Domly/0.1')
 GEOCODER_TIMEOUT = float(os.getenv('GEOCODER_TIMEOUT', '5'))
+
+# Email codes use Django's email backend. Development defaults to the console;
+# production can switch to SMTP entirely through environment variables.
+EMAIL_BACKEND = os.getenv(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend',
+)
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Domly <no-reply@localhost>')
+LEGAL_CONTACT_EMAIL = os.getenv('LEGAL_CONTACT_EMAIL', 'support@domly.site')
+LEGAL_OPERATOR_NAME = os.getenv('LEGAL_OPERATOR_NAME', 'Владелец сервиса Domly')
+LEGAL_OPERATOR_ADDRESS = os.getenv('LEGAL_OPERATOR_ADDRESS', 'Республика Таджикистан')
+LEGAL_OPERATOR_REGISTRATION_ID = os.getenv('LEGAL_OPERATOR_REGISTRATION_ID', '')
+LEGAL_OPERATOR_TAX_ID = os.getenv('LEGAL_OPERATOR_TAX_ID', '')
+LEGAL_DATA_PROTECTION_CERTIFICATE = os.getenv(
+    'LEGAL_DATA_PROTECTION_CERTIFICATE',
+    '',
+)
+LEGAL_TERMS_VERSION = '2026-08-17'
+LEGAL_PRIVACY_VERSION = '2026-08-17'
+LEGAL_RULES_VERSION = '2026-08-17'
+LEGAL_DOCUMENTS_DRAFT = (
+    LEGAL_OPERATOR_NAME == 'Владелец сервиса Domly'
+    or LEGAL_OPERATOR_ADDRESS == 'Республика Таджикистан'
+    or not LEGAL_OPERATOR_REGISTRATION_ID
+    or not LEGAL_DATA_PROTECTION_CERTIFICATE
+)
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'true').lower() in {'1', 'true', 'yes'}
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'false').lower() in {'1', 'true', 'yes'}
+EMAIL_TIMEOUT = float(os.getenv('EMAIL_TIMEOUT', '10'))
 
 
 # Default primary key field type

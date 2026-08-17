@@ -1,17 +1,23 @@
+import json
+from datetime import date
 from decimal import Decimal, InvalidOperation
+from urllib.parse import urlsplit
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import IntegrityError, transaction
 from django.db.models import BooleanField, Exists, OuterRef, Q, Value
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
+from django.urls import Resolver404, resolve, reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.utils.translation import gettext as _
+from django.utils.text import Truncator
+from django.utils.translation import get_language, gettext as _
 from django.views.decorators.http import require_http_methods, require_POST
 
 from .forms import (
@@ -22,7 +28,7 @@ from .forms import (
     ModerationRejectForm,
     ModerationUnblockForm,
 )
-from .locations import CITIES, CITY_SESSION_KEY, get_selected_city
+from .locations import CITIES, CITY_SESSION_KEY, get_selected_city, localize_city_name
 from .geocoding import GeocodingRateLimited, GeocodingUnavailable, geocode_address
 from .models import (
     City,
@@ -219,16 +225,36 @@ def edit_listing(request, public_id):
         },
     )
 
-def listing_list(request):
+def listing_list(request, city_slug=None):
     selected_city = get_selected_city(request)
+    city_page = None
+    if city_slug is not None:
+        city_page = get_object_or_404(City, slug=city_slug, is_active=True)
     query = request.GET.get("q", "").strip()
     city_names = list(
         City.objects.filter(is_active=True).order_by("name").values_list("name", flat=True)
     )
     search_intent = parse_search_query(query, city_names) if query else None
     requested_city = request.GET.get("city", "").strip()
+    if city_page is None and requested_city in city_names:
+        target_city = City.objects.get(name=requested_city, is_active=True)
+        target = reverse("city_listings", kwargs={"city_slug": target_city.slug})
+        params = request.GET.copy()
+        params.pop("city", None)
+        if params:
+            target = f"{target}?{params.urlencode()}"
+        return redirect(target)
+    if city_page and requested_city in city_names and requested_city != city_page.name:
+        target = reverse("city_listings", kwargs={"city_slug": City.objects.get(name=requested_city).slug})
+        params = request.GET.copy()
+        params.pop("city", None)
+        if params:
+            target = f"{target}?{params.urlencode()}"
+        return redirect(target)
     result_city = (
-        requested_city
+        city_page.name
+        if city_page
+        else requested_city
         if requested_city in city_names
         else search_intent.city_name
         if search_intent and search_intent.city_name
@@ -361,6 +387,13 @@ def listing_list(request):
             "listing_count": paginator.count,
             "query": query,
             "result_city": result_city,
+            "selected_city": result_city,
+            "city_page": city_page,
+            "catalog_url": (
+                reverse("city_listings", kwargs={"city_slug": city_page.slug})
+                if city_page
+                else reverse("listing_list")
+            ),
             "search_cities": city_names,
             "search_interpretation": interpretation_labels(search_intent) if search_intent else [],
             "deal_type": deal_type,
@@ -380,7 +413,79 @@ def listing_list(request):
             "property_types": Listing.PropertyType.choices,
             "show_favorite_button": True,
             "next_page_query": next_page_query,
+            "seo_title": _("Недвижимость в %(city)s — Domly")
+            % {"city": localize_city_name(result_city)},
+            "seo_description": _(
+                "Актуальные объявления об аренде и продаже недвижимости в %(city)s. "
+                "Квартиры, дома, комнаты и участки на Domly."
+            ) % {"city": localize_city_name(result_city)},
+            "seo_robots": "noindex,follow" if request.GET else "index,follow",
         },
+    )
+
+
+def _listing_structured_data(request, listing, listing_images):
+    listing_url = request.build_absolute_uri(listing.get_absolute_url())
+    property_types = {
+        Listing.PropertyType.APARTMENT: "Apartment",
+        Listing.PropertyType.HOUSE: "House",
+        Listing.PropertyType.ROOM: "Room",
+        Listing.PropertyType.LAND: "Place",
+        Listing.PropertyType.COMMERCIAL: "Place",
+    }
+    property_data = {
+        "@type": property_types.get(listing.property_type, "Place"),
+        "name": listing.title,
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": listing.address,
+            "addressLocality": localize_city_name(listing.city.name),
+            "addressCountry": "TJ",
+        },
+    }
+    if listing.rooms is not None:
+        property_data["numberOfRooms"] = listing.rooms
+    if listing.area is not None:
+        property_data["floorSize"] = {
+            "@type": "QuantitativeValue",
+            "value": listing.area,
+            "unitCode": "MTK",
+        }
+    if listing.latitude is not None and listing.longitude is not None:
+        property_data["geo"] = {
+            "@type": "GeoCoordinates",
+            "latitude": listing.latitude,
+            "longitude": listing.longitude,
+        }
+
+    data = {
+        "@context": "https://schema.org",
+        "@type": "RealEstateListing",
+        "@id": f"{listing_url}#listing",
+        "url": listing_url,
+        "name": listing.title,
+        "description": listing.description,
+        "datePosted": (listing.published_at or listing.created_at).isoformat(),
+        "dateModified": listing.updated_at.isoformat(),
+        "inLanguage": (get_language() or settings.LANGUAGE_CODE).split("-")[0],
+        "offers": {
+            "@type": "Offer",
+            "url": listing_url,
+            "price": listing.price,
+            "priceCurrency": listing.currency,
+            "availability": "https://schema.org/InStock",
+        },
+        "about": property_data,
+        "seller": {
+            "@type": "Person",
+            "name": listing.owner.username,
+        },
+    }
+    images = [request.build_absolute_uri(image.image.url) for image in listing_images]
+    if images:
+        data["image"] = images
+    return json.dumps(data, cls=DjangoJSONEncoder, ensure_ascii=False).translate(
+        str.maketrans({"&": "\\u0026", "<": "\\u003c", ">": "\\u003e"})
     )
 
 
@@ -428,13 +533,16 @@ def listing_detail(request, public_id):
             status=ListingReport.Status.PENDING,
         ).exists()
     )
+    listing_images = list(listing.images.all())
+    cover_image = listing_images[0] if listing_images else None
+    is_published = listing.status == Listing.Status.PUBLISHED
 
     return render(
         request,
         "listings/detail.html",
         {
             "listing": listing,
-            "listing_images": list(listing.images.all()),
+            "listing_images": listing_images,
             "is_favorite": (
                 request.user.is_authenticated
                 and Favorite.objects.filter(user=request.user, listing=listing).exists()
@@ -472,6 +580,18 @@ def listing_detail(request, public_id):
                 if listing.deal_type == Listing.DealType.SALE
                 else _("Отметить сданным")
             ),
+            "seo_title": f"{listing.title} — {localize_city_name(listing.city.name)} | Domly",
+            "seo_description": Truncator(listing.description).chars(155),
+            "og_type": "article",
+            "og_image_url": (
+                request.build_absolute_uri(cover_image.image.url) if cover_image else ""
+            ),
+            "listing_structured_data": (
+                _listing_structured_data(request, listing, listing_images)
+                if is_published
+                else ""
+            ),
+            "seo_robots": "index,follow" if is_published else "noindex,nofollow",
         },
     )
 
@@ -605,7 +725,66 @@ def report_listing(request, public_id):
 
 @require_http_methods(["GET"])
 def help(request):
-    return render(request, "listings/help.html")
+    return render(
+        request,
+        "listings/help.html",
+        {
+            "seo_title": _("Помощь и безопасность — Domly"),
+            "seo_description": _(
+                "Ответы о регистрации, публикации объявлений, модерации, "
+                "поиске недвижимости и безопасном использовании Domly."
+            ),
+        },
+    )
+
+
+def _legal_page(request, template_name, title, description):
+    return render(
+        request,
+        template_name,
+        {
+            "legal_contact_email": settings.LEGAL_CONTACT_EMAIL,
+            "legal_operator_name": settings.LEGAL_OPERATOR_NAME,
+            "legal_operator_address": settings.LEGAL_OPERATOR_ADDRESS,
+            "legal_operator_registration_id": settings.LEGAL_OPERATOR_REGISTRATION_ID,
+            "legal_operator_tax_id": settings.LEGAL_OPERATOR_TAX_ID,
+            "legal_data_protection_certificate": settings.LEGAL_DATA_PROTECTION_CERTIFICATE,
+            "legal_documents_draft": settings.LEGAL_DOCUMENTS_DRAFT,
+            "legal_updated_at": date(2026, 8, 17),
+            "seo_title": title,
+            "seo_description": description,
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def privacy_policy(request):
+    return _legal_page(
+        request,
+        "listings/legal/privacy.html",
+        _("Политика конфиденциальности — Domly"),
+        _("Как Domly собирает, использует, хранит и защищает данные пользователей."),
+    )
+
+
+@require_http_methods(["GET"])
+def terms_of_use(request):
+    return _legal_page(
+        request,
+        "listings/legal/terms.html",
+        _("Пользовательское соглашение — Domly"),
+        _("Условия регистрации, публикации объявлений и использования сервиса Domly."),
+    )
+
+
+@require_http_methods(["GET"])
+def publication_rules(request):
+    return _legal_page(
+        request,
+        "listings/legal/publication_rules.html",
+        _("Правила публикации и модерации — Domly"),
+        _("Требования к объявлениям и порядок их проверки модераторами Domly."),
+    )
 
 
 @login_required
@@ -899,6 +1078,16 @@ def set_city(request):
         require_https=request.is_secure(),
     ):
         next_url = reverse("listing_list")
+    else:
+        try:
+            next_match = resolve(urlsplit(next_url).path)
+        except Resolver404:
+            next_match = None
+        if next_match and next_match.url_name in {"listing_list", "city_listings"}:
+            city_object = City.objects.get(name=city, is_active=True)
+            next_url = reverse(
+                "city_listings", kwargs={"city_slug": city_object.slug}
+            )
     return redirect(next_url)
 
 

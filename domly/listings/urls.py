@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.listing_list, name='listing_list'),
+    path('city/<slug:city_slug>/', views.listing_list, name='city_listings'),
     path('listing/<uuid:public_id>/', views.listing_detail, name='listing_detail'),
     path('listing/<uuid:public_id>/edit/', views.edit_listing, name='edit_listing'),
     path('listing/<uuid:public_id>/favorite/', views.toggle_favorite, name='toggle_favorite'),
@@ -13,6 +14,9 @@ urlpatterns = [
     path('listing/<uuid:public_id>/delete/', views.delete_listing, name='delete_listing'),
     path('create/', views.create_listing, name='create'),
     path('help/', views.help, name='help'),
+    path('privacy/', views.privacy_policy, name='privacy_policy'),
+    path('terms/', views.terms_of_use, name='terms_of_use'),
+    path('publication-rules/', views.publication_rules, name='publication_rules'),
     path('moderation/', views.moderation, name='moderation'),
     path('reports/', views.listing_reports, name='listing_reports'),
     path('reports/<uuid:public_id>/review/', views.review_listing_report, name='review_listing_report'),

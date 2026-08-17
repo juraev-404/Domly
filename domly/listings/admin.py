@@ -26,12 +26,19 @@ class ListingAdmin(admin.ModelAdmin):
         "property_type",
         "price",
         "currency",
+        "contact_phone",
         "status",
         "deleted_at",
         "created_at",
     )
     list_filter = ("status", "deal_type", "property_type", "currency", "city")
-    search_fields = ("title", "description", "address", "owner__username")
+    search_fields = (
+        "title",
+        "description",
+        "address",
+        "contact_phone",
+        "owner__username",
+    )
     readonly_fields = (
         "public_id",
         "created_at",

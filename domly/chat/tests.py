@@ -386,7 +386,7 @@ class WorkingChatTests(TestCase):
                 {
                     "body": "",
                     "client_id": str(uuid4()),
-                    "images": [self.make_image()],
+                    "images": [self.make_image(size=(2000, 1000))],
                 },
                 HTTP_ACCEPT="application/json",
             )
@@ -395,8 +395,13 @@ class WorkingChatTests(TestCase):
             self.assertEqual(Message.objects.count(), 1)
             self.assertEqual(MessageAttachment.objects.count(), 1)
             attachment_data = response.json()["message"]["attachments"][0]
-            self.assertEqual(attachment_data["content_type"], "image/png")
-            self.assertTrue(attachment_data["url"].endswith(".png"))
+            self.assertEqual(attachment_data["content_type"], "image/webp")
+            self.assertTrue(attachment_data["url"].endswith(".webp"))
+            attachment = MessageAttachment.objects.get()
+            with Image.open(attachment.image.path) as optimized:
+                self.assertEqual(optimized.format, "WEBP")
+                self.assertLessEqual(max(optimized.size), 1600)
+                self.assertFalse(optimized.getexif())
 
     def test_non_image_attachment_is_rejected(self):
         self.start_chat()

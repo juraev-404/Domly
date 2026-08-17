@@ -2,11 +2,15 @@ from pathlib import PurePath
 from uuid import uuid4
 
 from django.conf import settings
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
+from django.db import models, transaction
 from django.db.models import F, Q
+from django.db.models.signals import post_delete, post_save, pre_save
+from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+
+from domly.image_processing import process_listing_image
 
 
 class City(models.Model):
@@ -44,29 +48,29 @@ class ListingQuerySet(models.QuerySet):
 
 class Listing(models.Model):
     class DealType(models.TextChoices):
-        SALE = "sale", "Продажа"
-        RENT = "rent", "Аренда"
+        SALE = "sale", _("Продажа")
+        RENT = "rent", _("Аренда")
 
     class PropertyType(models.TextChoices):
-        APARTMENT = "apartment", "Квартира"
-        HOUSE = "house", "Дом"
-        ROOM = "room", "Комната"
-        LAND = "land", "Участок"
-        COMMERCIAL = "commercial", "Коммерческая недвижимость"
+        APARTMENT = "apartment", _("Квартира")
+        HOUSE = "house", _("Дом")
+        ROOM = "room", _("Комната")
+        LAND = "land", _("Участок")
+        COMMERCIAL = "commercial", _("Коммерческая недвижимость")
 
     class Status(models.TextChoices):
-        DRAFT = "draft", "Черновик"
-        PENDING = "pending", "На модерации"
-        PUBLISHED = "published", "Опубликовано"
-        REJECTED = "rejected", "Отклонено"
-        ARCHIVED = "archived", "Снято с публикации"
-        COMPLETED = "completed", "Сделка завершена"
-        BLOCKED = "blocked", "Заблокировано модератором"
-        DELETED = "deleted", "Удалено"
+        DRAFT = "draft", _("Черновик")
+        PENDING = "pending", _("На модерации")
+        PUBLISHED = "published", _("Опубликовано")
+        REJECTED = "rejected", _("Отклонено")
+        ARCHIVED = "archived", _("Снято с публикации")
+        COMPLETED = "completed", _("Сделка завершена")
+        BLOCKED = "blocked", _("Заблокировано модератором")
+        DELETED = "deleted", _("Удалено")
 
     class Currency(models.TextChoices):
-        TJS = "TJS", "Сомони"
-        USD = "USD", "Доллар США"
+        TJS = "TJS", _("Сомони")
+        USD = "USD", _("Доллар США")
 
     public_id = models.UUIDField(default=uuid4, editable=False, unique=True)
     owner = models.ForeignKey(
@@ -97,6 +101,18 @@ class Listing(models.Model):
         default=Currency.TJS,
     )
     is_negotiable = models.BooleanField(default=False)
+    contact_phone = models.CharField(
+        max_length=16,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r"^\+[1-9]\d{7,14}$",
+                message=_("Введите номер в международном формате, например +992900001122."),
+            )
+        ],
+        verbose_name=_("Номер для связи"),
+        help_text=_("Необязательно. Этот номер будет виден на странице объявления."),
+    )
 
     address = models.CharField(max_length=255)
     latitude = models.DecimalField(
@@ -190,6 +206,11 @@ def listing_image_upload_to(instance, filename):
     return f"listings/{instance.listing.public_id}/{safe_filename}"
 
 
+def listing_thumbnail_upload_to(instance, filename):
+    safe_filename = PurePath(filename).name
+    return f"listings/{instance.listing.public_id}/thumbnails/{safe_filename}"
+
+
 class ListingImage(models.Model):
     listing = models.ForeignKey(
         Listing,
@@ -197,6 +218,10 @@ class ListingImage(models.Model):
         related_name="images",
     )
     image = models.ImageField(upload_to=listing_image_upload_to)
+    thumbnail = models.ImageField(
+        upload_to=listing_thumbnail_upload_to,
+        blank=True,
+    )
     alt_text = models.CharField(max_length=200, blank=True)
     position = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -211,6 +236,49 @@ class ListingImage(models.Model):
 
     def __str__(self):
         return f"{self.listing}: {self.position}"
+
+    def save(self, *args, **kwargs):
+        if self.image and not self.image._committed:
+            processed, thumbnail = process_listing_image(
+                self.image.file,
+                self.image.name,
+            )
+            self.image = processed.file
+            self.thumbnail = thumbnail.file
+        super().save(*args, **kwargs)
+
+
+@receiver(pre_save, sender=ListingImage)
+def remember_replaced_listing_files(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+    previous = sender.objects.filter(pk=instance.pk).only("image", "thumbnail").first()
+    if previous:
+        instance._replaced_listing_files = {
+            previous.image.name if previous.image else "",
+            previous.thumbnail.name if previous.thumbnail else "",
+        }
+
+
+@receiver(post_save, sender=ListingImage)
+def delete_replaced_listing_files(sender, instance, **kwargs):
+    current_names = {
+        instance.image.name if instance.image else "",
+        instance.thumbnail.name if instance.thumbnail else "",
+    }
+    for name in getattr(instance, "_replaced_listing_files", set()) - current_names - {""}:
+        transaction.on_commit(lambda name=name: instance.image.storage.delete(name))
+
+
+@receiver(post_delete, sender=ListingImage)
+def delete_listing_image_files(sender, instance, **kwargs):
+    storage = instance.image.storage
+    names = {
+        instance.image.name if instance.image else "",
+        instance.thumbnail.name if instance.thumbnail else "",
+    }
+    for name in names - {""}:
+        transaction.on_commit(lambda name=name: storage.delete(name))
 
 
 class Favorite(models.Model):

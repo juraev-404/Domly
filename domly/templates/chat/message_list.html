@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Сообщения — Domly{% endblock %}
+{% block title %}{% translate "Сообщения" %} — Domly{% endblock %}
 
 {% block content %}
 <section class="mx-auto w-full max-w-3xl pb-8 pt-5 md:pt-8">
     <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-gray-950 md:text-3xl">Сообщения</h1>
-        <p class="mt-1 text-sm text-gray-500">Обсуждайте объявления напрямую с владельцами.</p>
+        <h1 class="text-2xl font-semibold text-gray-950 md:text-3xl">{% translate "Сообщения" %}</h1>
+        <p class="mt-1 text-sm text-gray-500">{% translate "Обсуждайте объявления напрямую с владельцами." %}</p>
     </div>
 
     {% if conversations %}
@@ -17,7 +17,7 @@
                 <a href="{% url 'conversation_detail' conversation.public_id %}" class="flex min-w-0 flex-1 items-center gap-3 p-3 sm:p-4">
                     <div class="relative shrink-0">
                         {% if conversation.other_user and conversation.other_user.avatar %}
-                            <img src="{{ conversation.other_user.avatar.url }}" alt="Аватар {{ conversation.other_user.username }}" class="h-12 w-12 rounded-full object-cover sm:h-14 sm:w-14">
+                            <img src="{{ conversation.other_user.avatar.url }}" alt="{% blocktranslate with username=conversation.other_user.username %}Аватар {{ username }}{% endblocktranslate %}" class="h-12 w-12 rounded-full object-cover sm:h-14 sm:w-14">
                         {% elif conversation.other_user %}
                             <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-900 text-lg font-semibold text-white sm:h-14 sm:w-14">{{ conversation.other_user.username|first|upper }}</div>
                         {% else %}
@@ -27,25 +27,25 @@
 
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center justify-between gap-3">
-                            <p class="truncate font-semibold text-gray-950">{% if conversation.other_user %}{{ conversation.other_user.username }}{% else %}Недоступный пользователь{% endif %}</p>
+                            <p class="truncate font-semibold text-gray-950">{% if conversation.other_user %}{{ conversation.other_user.username }}{% else %}{% translate "Недоступный пользователь" %}{% endif %}</p>
                             {% if conversation.last_message_created_at %}<time class="shrink-0 text-xs text-gray-400">{{ conversation.last_message_created_at|date:"d.m H:i" }}</time>{% endif %}
                         </div>
-                        <p class="mt-0.5 truncate text-xs font-medium text-gray-500">{% if conversation.listing %}{{ conversation.listing.title }}{% else %}Объявление недоступно{% endif %}</p>
+                        <p class="mt-0.5 truncate text-xs font-medium text-gray-500">{% if conversation.listing %}{{ conversation.listing.title }}{% else %}{% translate "Объявление недоступно" %}{% endif %}</p>
                         <div class="mt-1 flex min-w-0 items-center justify-between gap-3">
-                            <p class="truncate text-sm text-gray-500">{% if conversation.last_message_body %}{{ conversation.last_message_body }}{% elif conversation.last_message_attachment_count %}📷 {% if conversation.last_message_attachment_count > 1 %}Фотографии{% else %}Фотография{% endif %}{% else %}Диалог создан. Напишите первое сообщение.{% endif %}</p>
+                            <p class="truncate text-sm text-gray-500">{% if conversation.last_message_body %}{{ conversation.last_message_body }}{% elif conversation.last_message_attachment_count %}📷 {% if conversation.last_message_attachment_count > 1 %}{% translate "Фотографии" %}{% else %}{% translate "Фотография" %}{% endif %}{% else %}{% translate "Диалог создан. Напишите первое сообщение." %}{% endif %}</p>
                             {% if conversation.unread_count %}<span class="min-w-5 shrink-0 rounded-full bg-green-500 px-1.5 text-center text-[11px] font-semibold leading-5 text-white">{% if conversation.unread_count > 99 %}99+{% else %}{{ conversation.unread_count }}{% endif %}</span>{% endif %}
                         </div>
                     </div>
 
                     {% if conversation.listing %}
                         {% with cover=conversation.listing.images.all|first %}
-                            {% if cover %}<img src="{{ cover.image.url }}" alt="" class="hidden h-14 w-16 shrink-0 rounded-xl object-cover sm:block">{% endif %}
+                            {% if cover %}<img src="{% if cover.thumbnail %}{{ cover.thumbnail.url }}{% else %}{{ cover.image.url }}{% endif %}" alt="" class="hidden h-14 w-16 shrink-0 rounded-xl object-cover sm:block">{% endif %}
                         {% endwith %}
                     {% endif %}
                 </a>
                 <form data-delete-conversation-form method="post" action="{% url 'delete_conversation' conversation.public_id %}" class="shrink-0 pr-2 sm:pr-3">
                     {% csrf_token %}
-                    <button type="submit" title="Удалить чат" aria-label="Удалить чат с {% if conversation.other_user %}{{ conversation.other_user.username }}{% else %}пользователем{% endif %}" class="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition hover:bg-red-50 hover:text-red-600">
+                    <button type="submit" title="{% translate 'Удалить чат' %}" aria-label="{% translate 'Удалить чат' %}" class="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition hover:bg-red-50 hover:text-red-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path><path d="M10 11v5"></path><path d="M14 11v5"></path></svg>
                     </button>
                 </form>
@@ -57,9 +57,9 @@
             <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-700">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V5a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path></svg>
             </div>
-            <h2 class="mt-4 text-lg font-semibold text-gray-900">Пока нет диалогов</h2>
-            <p class="mx-auto mt-2 max-w-sm text-sm text-gray-500">Откройте объявление и нажмите «Написать владельцу».</p>
-            <a href="{% url 'listing_list' %}" class="mt-5 inline-flex rounded-xl bg-black px-5 py-3 text-sm font-medium text-white">Перейти к объявлениям</a>
+            <h2 class="mt-4 text-lg font-semibold text-gray-900">{% translate "Пока нет диалогов" %}</h2>
+            <p class="mx-auto mt-2 max-w-sm text-sm text-gray-500">{% translate "Откройте объявление и нажмите «Написать владельцу»." %}</p>
+            <a href="{% url 'listing_list' %}" class="mt-5 inline-flex rounded-xl bg-black px-5 py-3 text-sm font-medium text-white">{% translate "Перейти к объявлениям" %}</a>
         </div>
     {% endif %}
 </section>

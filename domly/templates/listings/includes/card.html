@@ -1,9 +1,10 @@
+{% load i18n location_tags %}
 <article class="group relative overflow-hidden rounded-2xl border border-gray-800 bg-black shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-    <a href="{{ listing.get_absolute_url }}" class="block" aria-label="Открыть объявление {{ listing.title }}">
+    <a href="{{ listing.get_absolute_url }}" class="block" aria-label="{% blocktranslate with title=listing.title %}Открыть объявление {{ title }}{% endblocktranslate %}">
         <div class="relative aspect-[4/3] overflow-hidden bg-gray-200">
             {% with cover=listing.images.all|first %}
                 {% if cover %}
-                    <img src="{{ cover.image.url }}" alt="{{ cover.alt_text|default:listing.title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]">
+                    <img src="{% if cover.thumbnail %}{{ cover.thumbnail.url }}{% else %}{{ cover.image.url }}{% endif %}" alt="{{ cover.alt_text|default:listing.title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]">
                 {% else %}
                     <div class="flex h-full items-center justify-center text-gray-400">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -25,22 +26,22 @@
         <div class="space-y-1.5 bg-black p-3 text-white sm:space-y-2 sm:p-4">
             <p class="text-base font-semibold text-white sm:text-lg">
                 {{ listing.price|floatformat:"-2" }} {{ listing.currency }}
-                {% if listing.is_negotiable %}<span class="text-sm font-normal text-gray-400">торг</span>{% endif %}
+                {% if listing.is_negotiable %}<span class="text-sm font-normal text-gray-400">{% translate "торг" %}</span>{% endif %}
             </p>
             <h3 class="truncate text-sm font-medium text-white sm:text-base">{{ listing.title }}</h3>
-            <p class="truncate text-xs text-gray-400 sm:text-sm">{{ listing.city.name }} · {{ listing.address }}</p>
+            <p class="truncate text-xs text-gray-400 sm:text-sm">{{ listing.city.name|city_label }} · {{ listing.address }}</p>
             {% if listing.rooms or listing.area or listing.floor %}
                 <p class="truncate text-xs text-gray-300 sm:text-sm">
-                    {% if listing.rooms %}{{ listing.rooms }} комн.{% endif %}
-                    {% if listing.area %}{% if listing.rooms %} · {% endif %}{{ listing.area|floatformat:"-2" }} м²{% endif %}
-                    {% if listing.floor %}{% if listing.rooms or listing.area %} · {% endif %}{{ listing.floor }}{% if listing.total_floors %}/{{ listing.total_floors }}{% endif %} этаж{% endif %}
+                    {% if listing.rooms %}{{ listing.rooms }} {% translate "комн." %}{% endif %}
+                    {% if listing.area %}{% if listing.rooms %} · {% endif %}{{ listing.area|floatformat:"-2" }} {% translate "м²" %}{% endif %}
+                    {% if listing.floor %}{% if listing.rooms or listing.area %} · {% endif %}{{ listing.floor }}{% if listing.total_floors %}/{{ listing.total_floors }}{% endif %} {% translate "этаж" %}{% endif %}
                 </p>
             {% endif %}
         </div>
     </a>
 
     {% if show_edit_button %}
-        <a href="{% url 'edit_listing' listing.public_id %}" title="Редактировать объявление" class="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-gray-900 shadow sm:right-3 sm:top-3 sm:h-9 sm:w-9">
+        <a href="{% url 'edit_listing' listing.public_id %}" title="{% translate 'Редактировать объявление' %}" class="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-gray-900 shadow sm:right-3 sm:top-3 sm:h-9 sm:w-9">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"></path></svg>
         </a>
     {% endif %}
@@ -49,7 +50,7 @@
         <form method="post" action="{% url 'toggle_favorite' listing.public_id %}" class="absolute right-3 top-3">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <button type="submit" title="Удалить из избранного" aria-label="Удалить {{ listing.title }} из избранного" class="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-gray-900 shadow transition hover:bg-white hover:text-red-600">
+            <button type="submit" title="{% translate 'Удалить из избранного' %}" aria-label="{% blocktranslate with title=listing.title %}Удалить {{ title }} из избранного{% endblocktranslate %}" class="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-gray-900 shadow transition hover:bg-white hover:text-red-600">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M6 3h12a1 1 0 0 1 1 1v17a1 1 0 0 1-1.58.81L12 17.94l-5.42 3.87A1 1 0 0 1 5 21V4a1 1 0 0 1 1-1Z"></path>
                 </svg>
@@ -59,7 +60,7 @@
         {% if user.is_authenticated %}
             <form method="post" action="{% url 'toggle_favorite' listing.public_id %}" class="absolute right-2 top-2 sm:right-3 sm:top-3">
                 {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" title="{% if listing.is_favorite %}Удалить из избранного{% else %}Добавить в избранное{% endif %}" class="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-gray-900 shadow sm:h-9 sm:w-9">
+                <button type="submit" title="{% if listing.is_favorite %}{% translate 'Удалить из избранного' %}{% else %}{% translate 'Добавить в избранное' %}{% endif %}" class="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-gray-900 shadow sm:h-9 sm:w-9">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="{% if listing.is_favorite %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1z"></path></svg>
                 </button>
             </form>

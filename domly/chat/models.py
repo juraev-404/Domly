@@ -7,6 +7,8 @@ from django.db.models import Q
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
+from domly.image_processing import process_chat_image
+
 
 def message_attachment_upload_to(instance, filename):
     suffix = Path(filename).suffix.lower()
@@ -153,6 +155,14 @@ class MessageAttachment(models.Model):
 
     def __str__(self):
         return self.original_name
+
+    def save(self, *args, **kwargs):
+        if self.image and not self.image._committed:
+            processed = process_chat_image(self.image.file, self.image.name)
+            self.image = processed.file
+            self.content_type = processed.content_type
+            self.size = processed.file.size
+        super().save(*args, **kwargs)
 
 
 @receiver(post_delete, sender=MessageAttachment)

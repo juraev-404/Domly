@@ -1,0 +1,839 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Domly\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Русский"
+msgstr "Russian"
+
+msgid "Тоҷикӣ"
+msgstr "Tajik"
+
+msgid "Выбрать язык"
+msgstr "Choose language"
+
+msgid "Например: двушка до 5000 в Душанбе"
+msgstr "For example: a two-room apartment up to 5000 in Dushanbe"
+
+msgid "Двушка до 5000"
+msgstr "Two-room apartment up to 5000"
+
+msgid "Найти"
+msgstr "Search"
+
+msgid "Открыть карту города %(city)s"
+msgstr "Open the map of %(city)s"
+
+msgid "Помощь"
+msgstr "Help"
+
+msgid "Фильтр"
+msgstr "Filter"
+
+msgid "Дополнительные фильтры"
+msgstr "More filters"
+
+msgid "Модерация"
+msgstr "Moderation"
+
+msgid "Жалобы"
+msgstr "Reports"
+
+msgid "Блокировки"
+msgstr "Blocks"
+
+msgid "Добавить"
+msgstr "Add"
+
+msgid "Уведомления"
+msgstr "Notifications"
+
+msgid "непрочитанных"
+msgstr "unread"
+
+msgid "Сообщения"
+msgstr "Messages"
+
+msgid "Избранное"
+msgstr "Favorites"
+
+msgid "Профиль"
+msgstr "Profile"
+
+msgid "Выход из аккаунта"
+msgstr "Sign out"
+
+msgid "Выйти из аккаунта"
+msgstr "Sign out"
+
+msgid "Вход"
+msgstr "Sign in"
+
+msgid "Регистрация"
+msgstr "Sign up"
+
+msgid "Главная"
+msgstr "Home"
+
+msgid "аренда и продажа недвижимости"
+msgstr "property rentals and sales"
+
+msgid "Аватар %(username)s"
+msgstr "Avatar of %(username)s"
+
+msgid "На Domly с %(joined)s"
+msgstr "On Domly since %(joined)s"
+
+msgid "Разделы личного кабинета"
+msgstr "Account sections"
+
+msgid "Объявления"
+msgstr "Listings"
+
+msgid "Черновики"
+msgstr "Drafts"
+
+msgid "Личные данные"
+msgstr "Personal details"
+
+msgid "Эти данные помогут другим пользователям узнать, с кем они общаются."
+msgstr "These details help other users know who they are talking to."
+
+msgid "Фото профиля"
+msgstr "Profile photo"
+
+msgid "Удалить"
+msgstr "Delete"
+
+msgid "Имя"
+msgstr "First name"
+
+msgid "Фамилия"
+msgstr "Last name"
+
+msgid "Ник"
+msgstr "Username"
+
+msgid "Подтверждённый email"
+msgstr "Verified email"
+
+msgid "Не добавлен"
+msgstr "Not added"
+
+msgid "Подтверждён"
+msgstr "Verified"
+
+msgid "Сохранить изменения"
+msgstr "Save changes"
+
+msgid "Изменить email"
+msgstr "Change email"
+
+msgid "Новый адрес начнёт действовать только после подтверждения кодом."
+msgstr "The new address will be used only after code verification."
+
+msgid "Новый email"
+msgstr "New email"
+
+msgid "Текущий пароль"
+msgstr "Current password"
+
+msgid "Отправить код"
+msgstr "Send code"
+
+msgid "Мои объявления"
+msgstr "My listings"
+
+msgid "Опубликованные объявления и те, что проходят модерацию."
+msgstr "Published listings and listings under review."
+
+msgid "Неопубликованные объявления можно продолжить позже."
+msgstr "You can continue unpublished listings later."
+
+msgid "Сохранённые объявления всегда под рукой."
+msgstr "Saved listings are always close at hand."
+
+msgid "Добавить объявление"
+msgstr "Add listing"
+
+msgid "Здесь пока пусто"
+msgstr "Nothing here yet"
+
+msgid "Добавляйте интересные объявления в избранное с их страницы."
+msgstr "Add interesting listings to favorites from their page."
+
+msgid "Сохранённые черновики появятся в этом разделе."
+msgstr "Saved drafts will appear in this section."
+
+msgid "Создайте первое объявление — его статус будет виден прямо на карточке."
+msgstr "Create your first listing — its status will be shown on the card."
+
+msgid "Создать объявление"
+msgstr "Create listing"
+
+msgid "Выйти из аккаунта?"
+msgstr "Sign out?"
+
+msgid "Вы сможете снова войти по нику или email и паролю."
+msgstr "You can sign in again with your username or email and password."
+
+msgid "Отмена"
+msgstr "Cancel"
+
+msgid "Выйти"
+msgstr "Sign out"
+
+msgid "Войти"
+msgstr "Sign in"
+
+msgid "Используйте ник или подтверждённый email."
+msgstr "Use your username or verified email."
+
+msgid "Забыли пароль?"
+msgstr "Forgot your password?"
+
+msgid "Нет аккаунта?"
+msgstr "No account yet?"
+
+msgid "Зарегистрироваться"
+msgstr "Sign up"
+
+msgid "Мы отправим шестизначный код на вашу почту."
+msgstr "We will send a six-digit code to your email."
+
+msgid "Получить код"
+msgstr "Get code"
+
+msgid "Уже есть аккаунт?"
+msgstr "Already have an account?"
+
+msgid "Подтвердите email"
+msgstr "Verify your email"
+
+msgid "Подтвердить и создать аккаунт"
+msgstr "Verify and create account"
+
+msgid "Отправить новый код"
+msgstr "Send a new code"
+
+msgid "Изменить данные регистрации"
+msgstr "Change registration details"
+
+msgid "Восстановление пароля"
+msgstr "Password recovery"
+
+msgid "Введите подтверждённый email. Если аккаунт существует, мы отправим шестизначный код."
+msgstr "Enter your verified email. If the account exists, we will send a six-digit code."
+
+msgid "Вернуться ко входу"
+msgstr "Back to sign in"
+
+msgid "Введите код"
+msgstr "Enter the code"
+
+msgid "Подтвердить код"
+msgstr "Verify code"
+
+msgid "Новый пароль"
+msgstr "New password"
+
+msgid "Придумайте новый надёжный пароль для аккаунта."
+msgstr "Create a new secure password for your account."
+
+msgid "Сохранить пароль"
+msgstr "Save password"
+
+msgid "Подтвердите новый email"
+msgstr "Verify your new email"
+
+msgid "Подтвердить email"
+msgstr "Verify email"
+
+msgid "Отменить изменение"
+msgstr "Cancel change"
+
+msgid "Недвижимость в %(city)s"
+msgstr "Property in %(city)s"
+
+msgid "Результаты поиска"
+msgstr "Search results"
+
+msgid "По запросу «%(query)s» · %(city)s"
+msgstr "For “%(query)s” · %(city)s"
+
+msgid "Как пользоваться Domly? Ответы тут — в разделе помощи."
+msgstr "How do I use Domly? Find answers in Help."
+
+msgid "Быстрые категории"
+msgstr "Quick categories"
+
+msgid "Все"
+msgstr "All"
+
+msgid "Дополнительные параметры"
+msgstr "More options"
+
+msgid "Сбросить фильтры"
+msgstr "Reset filters"
+
+msgid "Показать"
+msgstr "Show"
+
+msgid "Закрыть дополнительные фильтры"
+msgstr "Close more filters"
+
+msgid "Закрыть"
+msgstr "Close"
+
+msgid "Сбросить всё"
+msgstr "Reset all"
+
+msgid "Применить"
+msgstr "Apply"
+
+msgid "Найдено"
+msgstr "Found"
+
+msgid "Поняли запрос"
+msgstr "Understood query"
+
+msgid "Смотреть на карте"
+msgstr "View on map"
+
+msgid "Показать ещё"
+msgstr "Show more"
+
+msgid "Объявления не найдены"
+msgstr "No listings found"
+
+msgid "Попробуйте изменить фильтры или выбрать другой город в шапке сайта."
+msgstr "Try changing the filters or choosing another city in the header."
+
+msgid "Сделка"
+msgstr "Deal"
+
+msgid "Тип"
+msgstr "Type"
+
+msgid "Любой"
+msgstr "Any"
+
+msgid "Цена от"
+msgstr "Min price"
+
+msgid "Цена до"
+msgstr "Max price"
+
+msgid "Город"
+msgstr "City"
+
+msgid "Сортировка"
+msgstr "Sort"
+
+msgid "Подходящие"
+msgstr "Best match"
+
+msgid "Новые"
+msgstr "Newest"
+
+msgid "Дешевле"
+msgstr "Lowest price"
+
+msgid "Дороже"
+msgstr "Highest price"
+
+msgid "Открыть объявление %(title)s"
+msgstr "Open listing %(title)s"
+
+msgid "торг"
+msgstr "negotiable"
+
+msgid "комн."
+msgstr "rooms"
+
+msgid "м²"
+msgstr "m²"
+
+msgid "этаж"
+msgstr "floor"
+
+msgid "Редактировать объявление"
+msgstr "Edit listing"
+
+msgid "Удалить из избранного"
+msgstr "Remove from favorites"
+
+msgid "Удалить %(title)s из избранного"
+msgstr "Remove %(title)s from favorites"
+
+msgid "Добавить в избранное"
+msgstr "Add to favorites"
+
+msgid "Продажа"
+msgstr "Sale"
+
+msgid "Аренда"
+msgstr "Rent"
+
+msgid "Квартира"
+msgstr "Apartment"
+
+msgid "Дом"
+msgstr "House"
+
+msgid "Комната"
+msgstr "Room"
+
+msgid "Участок"
+msgstr "Land"
+
+msgid "Коммерческая недвижимость"
+msgstr "Commercial property"
+
+msgid "Обсуждайте объявления напрямую с владельцами."
+msgstr "Discuss listings directly with owners."
+
+msgid "Недоступный пользователь"
+msgstr "Unavailable user"
+
+msgid "Объявление недоступно"
+msgstr "Listing unavailable"
+
+msgid "Фотографии"
+msgstr "Photos"
+
+msgid "Фотография"
+msgstr "Photo"
+
+msgid "Диалог создан. Напишите первое сообщение."
+msgstr "Conversation created. Send the first message."
+
+msgid "Удалить чат"
+msgstr "Delete chat"
+
+msgid "Пока нет диалогов"
+msgstr "No conversations yet"
+
+msgid "Откройте объявление и нажмите «Написать владельцу»."
+msgstr "Open a listing and select “Message owner”."
+
+msgid "Перейти к объявлениям"
+msgstr "Browse listings"
+
+msgid "Чат"
+msgstr "Chat"
+
+msgid "Назад к диалогам"
+msgstr "Back to conversations"
+
+msgid "Открыть профиль"
+msgstr "Open profile"
+
+msgid "Открыть"
+msgstr "Open"
+
+msgid "Открыть фотографию"
+msgstr "Open photo"
+
+msgid "Начните разговор"
+msgstr "Start the conversation"
+
+msgid "Уточните детали объявления, условия или удобное время для просмотра."
+msgstr "Ask about the listing details, terms, or a convenient viewing time."
+
+msgid "Прикрепить фотографии"
+msgstr "Attach photos"
+
+msgid "Отправить сообщение"
+msgstr "Send message"
+
+msgid "Просмотр фотографий чата"
+msgstr "Chat photo viewer"
+
+msgid "Закрыть просмотр"
+msgstr "Close viewer"
+
+msgid "Предыдущая фотография"
+msgstr "Previous photo"
+
+msgid "Следующая фотография"
+msgstr "Next photo"
+
+msgid "Удалить чат?"
+msgstr "Delete chat?"
+
+msgid "Чат и старая переписка исчезнут только у вас. У собеседника сообщения сохранятся."
+msgstr "The chat and its history will disappear only for you. The other person will keep the messages."
+
+msgid "Если собеседник напишет снова, чат появится без удалённой истории."
+msgstr "If they message again, the chat will return without the deleted history."
+
+msgid "Редактирование объявления"
+msgstr "Edit listing"
+
+msgid "Новое объявление"
+msgstr "New listing"
+
+msgid "Измените данные объявления"
+msgstr "Update the listing details"
+
+msgid "Расскажите о недвижимости"
+msgstr "Tell us about the property"
+
+msgid "После отправки изменений объявление снова пройдёт модерацию."
+msgstr "After you submit changes, the listing will be reviewed again."
+
+msgid "Заполните основные данные. Можно сохранить черновик и вернуться к нему позже."
+msgstr "Fill in the main details. You can save a draft and return later."
+
+msgid "Вернуться к объявлению"
+msgstr "Back to listing"
+
+msgid "Основное"
+msgstr "Main details"
+
+msgid "Что вы предлагаете и где находится объект."
+msgstr "Describe what you offer and where the property is located."
+
+msgid "Связь"
+msgstr "Contact"
+
+msgid "При желании укажите номер, по которому можно связаться по этому объявлению."
+msgstr "Optionally provide a phone number for this listing."
+
+msgid "Место на карте"
+msgstr "Location on map"
+
+msgid "Domly найдёт место по городу и адресу. Проверьте точку и при необходимости передвиньте её."
+msgstr "Domly will locate the property from its city and address. Check the point and move it if needed."
+
+msgid "Найти по адресу"
+msgstr "Find by address"
+
+msgid "Удалить точку"
+msgstr "Remove point"
+
+msgid "Выбор места объекта на карте"
+msgstr "Choose property location on the map"
+
+msgid "Нажмите на карту, чтобы указать место объекта."
+msgstr "Click the map to mark the property location."
+
+msgid "Точку можно перетаскивать."
+msgstr "You can drag the point."
+
+msgid "Цена и характеристики"
+msgstr "Price and features"
+
+msgid "Укажите параметры, по которым покупатели будут искать объявление."
+msgstr "Enter the details buyers will use to find the listing."
+
+msgid "Можно удалить старые фотографии или добавить новые."
+msgstr "You can remove old photos or add new ones."
+
+msgid "Первая фотография позже станет обложкой карточки."
+msgstr "The first photo will become the listing card cover."
+
+msgid "После отправки объявление временно исчезнет из каталога до решения модератора."
+msgstr "After submission, the listing will be hidden until a moderator reviews it."
+
+msgid "Публикация поступит на модерацию. Черновик не виден другим."
+msgstr "The listing will be sent for review. Drafts are private."
+
+msgid "Сохранить как черновик"
+msgstr "Save as draft"
+
+msgid "Сохранить черновик"
+msgstr "Save draft"
+
+msgid "Отправить на модерацию"
+msgstr "Submit for review"
+
+msgid "Не удалось загрузить карту. Проверьте соединение и обновите страницу."
+msgstr "The map could not be loaded. Check your connection and refresh the page."
+
+msgid "Место объекта указано."
+msgstr "Property location selected."
+
+msgid "Введите адрес — Domly попробует найти его автоматически."
+msgstr "Enter an address and Domly will try to locate it automatically."
+
+msgid "Введите город и более точный адрес."
+msgstr "Enter a city and a more precise address."
+
+msgid "Ищем адрес…"
+msgstr "Searching for the address…"
+
+msgid "Не удалось найти адрес."
+msgstr "Could not find the address."
+
+msgid "Адрес найден"
+msgstr "Address found"
+
+msgid "Проверьте точку на карте."
+msgstr "Check the point on the map."
+
+msgid "Не удалось найти адрес. Поставьте точку вручную."
+msgstr "Could not find the address. Place the point manually."
+
+msgid "Фотографии объявления"
+msgstr "Listing photos"
+
+msgid "Фотографии не добавлены"
+msgstr "No photos added"
+
+msgid "Редактировать"
+msgstr "Edit"
+
+msgid "Показать расположение на карте"
+msgstr "Show location on map"
+
+msgid "Характеристики"
+msgstr "Features"
+
+msgid "Комнаты"
+msgstr "Rooms"
+
+msgid "Площадь"
+msgstr "Area"
+
+msgid "Этаж"
+msgstr "Floor"
+
+msgid "из"
+msgstr "of"
+
+msgid "Торг"
+msgstr "Negotiation"
+
+msgid "Уместен"
+msgstr "Available"
+
+msgid "Нет"
+msgstr "No"
+
+msgid "Описание"
+msgstr "Description"
+
+msgid "Расположение"
+msgstr "Location"
+
+msgid "Торг уместен"
+msgstr "Price negotiable"
+
+msgid "Открыть профиль автора"
+msgstr "Open owner profile"
+
+msgid "Владелец объявления"
+msgstr "Listing owner"
+
+msgid "Написать владельцу"
+msgstr "Message owner"
+
+msgid "Войти и написать"
+msgstr "Sign in to message"
+
+msgid "Просмотр фотографий"
+msgstr "Photo viewer"
+
+msgid "Тип сделки"
+msgstr "Deal type"
+
+msgid "Тип недвижимости"
+msgstr "Property type"
+
+msgid "Название"
+msgstr "Title"
+
+msgid "Цена"
+msgstr "Price"
+
+msgid "Валюта"
+msgstr "Currency"
+
+msgid "Адрес"
+msgstr "Address"
+
+msgid "Широта"
+msgstr "Latitude"
+
+msgid "Долгота"
+msgstr "Longitude"
+
+msgid "Площадь, м²"
+msgstr "Area, m²"
+
+msgid "Этажей в доме"
+msgstr "Floors in building"
+
+msgid "Например, 2-комнатная квартира в центре"
+msgstr "For example, a two-room apartment in the center"
+
+msgid "Опишите состояние, ремонт и важные особенности"
+msgstr "Describe the condition, renovation, and important features"
+
+msgid "Улица, дом, район"
+msgstr "Street, building, district"
+
+msgid "Выберите город"
+msgstr "Choose a city"
+
+msgid "До 10 фотографий, каждая не более 10 МБ."
+msgstr "Up to 10 photos, no more than 10 MB each."
+
+msgid "Номер для связи"
+msgstr "Contact phone"
+
+msgid "Необязательно. Этот номер будет виден на странице объявления."
+msgstr "Optional. This number will be visible on the listing page."
+
+msgid "Можно загрузить не более 10 фотографий."
+msgstr "You can upload up to 10 photos."
+
+msgid "Размер каждой фотографии не должен превышать 10 МБ."
+msgstr "Each photo must be no larger than 10 MB."
+
+msgid "Поддерживаются JPEG, PNG и WebP."
+msgstr "JPEG, PNG, and WebP are supported."
+
+msgid "Разрешение фотографии слишком большое."
+msgstr "The photo resolution is too large."
+
+msgid "Название должно содержать не менее 10 символов."
+msgstr "The title must contain at least 10 characters."
+
+msgid "Добавьте более подробное описание — не менее 30 символов."
+msgstr "Add a more detailed description of at least 30 characters."
+
+msgid "Цена должна быть больше нуля."
+msgstr "The price must be greater than zero."
+
+msgid "Душанбе"
+msgstr "Dushanbe"
+
+msgid "Худжанд"
+msgstr "Khujand"
+
+msgid "Бохтар"
+msgstr "Bokhtar"
+
+msgid "Куляб"
+msgstr "Kulob"
+
+msgid "Истаравшан"
+msgstr "Istaravshan"
+
+msgid "Турсунзаде"
+msgstr "Tursunzoda"
+
+msgid "Пенджикент"
+msgstr "Panjakent"
+
+msgid "Хорог"
+msgstr "Khorugh"
+
+msgid "Включить тёмную тему"
+msgstr "Enable dark theme"
+
+msgid "Включить светлую тему"
+msgstr "Enable light theme"
+
+msgid "Юридическая информация"
+msgstr "Legal information"
+
+msgid "Политика конфиденциальности"
+msgstr "Privacy Policy"
+
+msgid "Пользовательское соглашение"
+msgstr "Terms of Use"
+
+msgid "Правила публикации"
+msgstr "Posting Rules"
+
+msgid "Правила публикации и модерации"
+msgstr "Posting and Moderation Rules"
+
+msgid "Domly — аренда и продажа недвижимости"
+msgstr "Domly — property rentals and sales"
+
+msgid "Объявления об аренде и продаже недвижимости в Таджикистане. Ищите квартиры, дома, комнаты и участки напрямую от владельцев."
+msgstr "Property rental and sale listings in Tajikistan. Find apartments, houses, rooms, and land directly from owners."
+
+msgid "Помощь и безопасность — Domly"
+msgstr "Help and Safety — Domly"
+
+msgid "Политика конфиденциальности — Domly"
+msgstr "Privacy Policy — Domly"
+
+msgid "Пользовательское соглашение — Domly"
+msgstr "Terms of Use — Domly"
+
+msgid "Правила публикации и модерации — Domly"
+msgstr "Posting and Moderation Rules — Domly"
+
+msgid "Полный юридический текст пока опубликован на русском языке; перевод должен быть проверен отдельно перед запуском."
+msgstr "The full legal text is currently published in Russian; its translation must be reviewed separately before launch."
+
+msgid "Недвижимость в %(city)s — Domly"
+msgstr "Property in %(city)s — Domly"
+
+msgid "Актуальные объявления об аренде и продаже недвижимости в %(city)s. Квартиры, дома, комнаты и участки на Domly."
+msgstr "Current property rental and sale listings in %(city)s. Apartments, houses, rooms, and land on Domly."
+
+msgid "Ответы о регистрации, публикации объявлений, модерации, поиске недвижимости и безопасном использовании Domly."
+msgstr "Answers about registration, posting listings, moderation, property search, and using Domly safely."
+
+msgid "Как Domly собирает, использует, хранит и защищает данные пользователей."
+msgstr "How Domly collects, uses, stores, and protects user data."
+
+msgid "Условия регистрации, публикации объявлений и использования сервиса Domly."
+msgstr "Terms for registration, posting listings, and using Domly."
+
+msgid "Требования к объявлениям и порядок их проверки модераторами Domly."
+msgstr "Listing requirements and the Domly moderation review process."
+
+msgid "Я принимаю"
+msgstr "I accept"
+
+msgid "и"
+msgstr "and"
+
+msgid "Политики конфиденциальности"
+msgstr "Privacy Policy"
+
+msgid "Я даю согласие на сбор и обработку персональных данных, включая трансграничную передачу поставщикам инфраструктуры, на условиях"
+msgstr "I consent to the collection and processing of personal data, including cross-border transfers to infrastructure providers, under the"
+
+msgid "Я принимаю Пользовательское соглашение и Правила публикации."
+msgstr "I accept the Terms of Use and Posting Rules."
+
+msgid "Для регистрации необходимо принять условия сервиса."
+msgstr "You must accept the service terms to register."
+
+msgid "Я согласен на обработку персональных данных согласно Политике конфиденциальности."
+msgstr "I consent to personal data processing under the Privacy Policy."
+
+msgid "Для регистрации необходимо дать согласие на обработку данных."
+msgstr "You must consent to data processing to register."
+
+msgid "Обновлённые условия"
+msgstr "Updated terms"
+
+msgid "Чтобы продолжить пользоваться Domly, прочитайте и примите действующие документы."
+msgstr "To continue using Domly, read and accept the current documents."
+
+msgid "Необходимо принять действующие условия сервиса."
+msgstr "You must accept the current service terms."
+
+msgid "Необходимо подтвердить согласие на обработку данных."
+msgstr "You must confirm your consent to data processing."
+
+msgid "Принять и продолжить"
+msgstr "Accept and continue"
+
+msgid "Слишком много попыток входа. Повторите попытку через 15 минут."
+msgstr "Too many sign-in attempts. Try again in 15 minutes."

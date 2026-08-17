@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n location_tags %}
 
-{% block title %}Объявления на карте — {{ map_city_name }} — Domly{% endblock %}
+{% block title %}{% translate "Объявления на карте" %} — {{ map_city_name|city_label }} — Domly{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
@@ -32,13 +32,13 @@
     <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
             <p class="text-sm text-gray-500">Объявления на карте</p>
-            <h1 class="text-2xl font-semibold tracking-tight text-gray-950 md:text-3xl">{{ map_city_name }}</h1>
+            <h1 class="text-2xl font-semibold tracking-tight text-gray-950 md:text-3xl">{{ map_city_name|city_label }}</h1>
         </div>
         <form method="get" class="flex items-center gap-2">
             <label for="map-city" class="text-sm text-gray-500">Город</label>
             <select id="map-city" name="city" onchange="this.form.submit()" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-medium outline-none focus:border-gray-600">
                 {% for city_name in available_cities %}
-                    <option value="{{ city_name }}" {% if city_name == map_city_name %}selected{% endif %}>{{ city_name }}</option>
+                    <option value="{{ city_name }}" {% if city_name == map_city_name %}selected{% endif %}>{{ city_name|city_label }}</option>
                 {% endfor %}
             </select>
         </form>
@@ -67,7 +67,7 @@
                                 <a href="{{ listing.get_absolute_url }}" class="h-28 w-28 shrink-0 bg-gray-800" aria-label="Открыть объявление {{ listing.title }}">
                                     {% with cover=listing.images.all|first %}
                                         {% if cover %}
-                                            <img src="{{ cover.image.url }}" alt="{{ cover.alt_text|default:listing.title }}" class="h-full w-full object-cover">
+                                            <img src="{% if cover.thumbnail %}{{ cover.thumbnail.url }}{% else %}{{ cover.image.url }}{% endif %}" alt="{{ cover.alt_text|default:listing.title }}" class="h-full w-full object-cover">
                                         {% else %}
                                             <span class="flex h-full items-center justify-center text-gray-500">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m4 17 5-5 4 4 2-2 5 4"></path></svg>
@@ -87,7 +87,7 @@
                 </div>
             {% else %}
                 <div class="rounded-xl bg-gray-50 p-5 text-sm text-gray-600">
-                    В городе {{ map_city_name }} пока нет опубликованных объявлений с точным местом на карте.
+                    {% blocktranslate with city=map_city_name|city_label %}В городе {{ city }} пока нет опубликованных объявлений с точным местом на карте.{% endblocktranslate %}
                 </div>
             {% endif %}
 

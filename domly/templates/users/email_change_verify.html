@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="flex min-h-[calc(100dvh-7.25rem)] w-full items-center justify-center py-4 md:min-h-0 md:py-8">
+<section class="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm">
+    <h1 class="text-2xl font-bold">{% translate "Подтвердите новый email" %}</h1>
+    <p class="mt-1 text-sm text-gray-500">{% blocktranslate with email=attempt.email %}Код отправлен на {{ email }} и действует 10 минут.{% endblocktranslate %}</p>
+    <form method="post" class="mt-6 space-y-4" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ form.non_field_errors }}</div>{% endif %}
+        <div><label for="{{ form.code.id_for_label }}" class="mb-1 block text-sm font-medium">{{ form.code.label }}</label>{{ form.code }}{% for error in form.code.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}</div>
+        <button type="submit" class="w-full rounded-lg bg-black py-2.5 font-medium text-white hover:bg-gray-800">{% translate "Подтвердить email" %}</button>
+    </form>
+    <form method="post" action="{% url 'resend_email_change_code' %}" class="mt-4 text-center">{% csrf_token %}<button type="submit" class="text-sm font-medium text-green-700 hover:text-green-800">{% translate "Отправить новый код" %}</button></form>
+    <a href="{% url 'profile' %}" class="mt-4 block text-center text-sm text-gray-600 hover:text-black">{% translate "Отменить изменение" %}</a>
+</section>
+</div>
+{% endblock %}

@@ -2,23 +2,32 @@ from datetime import timedelta
 from uuid import uuid4
 
 from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.db import models, transaction
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.db.models.functions import Lower
+from django.dispatch import receiver
 from django.utils import timezone
+
+from domly.image_processing import process_avatar
 
 
 class User(AbstractUser):
-    phone = models.CharField(max_length=16, unique=True)
+    phone = models.CharField(max_length=16, blank=True, null=True, unique=True)
     email = models.EmailField(blank=True, null=True, unique=True)
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     is_phone_verified = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=False)
     is_moderator = models.BooleanField(
         default=False,
         help_text="Даёт доступ к разделу модерации объявлений.",
     )
+    terms_accepted_at = models.DateTimeField(blank=True, null=True)
+    terms_version = models.CharField(max_length=20, blank=True)
+    privacy_consent_at = models.DateTimeField(blank=True, null=True)
+    privacy_policy_version = models.CharField(max_length=20, blank=True)
 
     USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = ["phone"]
+    REQUIRED_FIELDS = ["email"]
 
     class Meta(AbstractUser.Meta):
         constraints = [
@@ -35,21 +44,58 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    def save(self, *args, **kwargs):
+        if self.avatar and not self.avatar._committed:
+            processed = process_avatar(self.avatar.file, self.avatar.name)
+            self.avatar = processed.file
+        super().save(*args, **kwargs)
+
+
+@receiver(pre_save, sender=User)
+def remember_replaced_avatar(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+    previous = sender.objects.filter(pk=instance.pk).only("avatar").first()
+    if previous and previous.avatar:
+        instance._replaced_avatar_name = previous.avatar.name
+
+
+@receiver(post_save, sender=User)
+def delete_replaced_avatar(sender, instance, **kwargs):
+    old_name = getattr(instance, "_replaced_avatar_name", "")
+    current_name = instance.avatar.name if instance.avatar else ""
+    if old_name and old_name != current_name:
+        transaction.on_commit(lambda: instance.avatar.storage.delete(old_name))
+
+
+@receiver(post_delete, sender=User)
+def delete_user_avatar(sender, instance, **kwargs):
+    if instance.avatar:
+        storage = instance.avatar.storage
+        name = instance.avatar.name
+        transaction.on_commit(lambda: storage.delete(name))
+
 
 class RegistrationAttempt(models.Model):
     username = models.CharField(max_length=150)
-    phone = models.CharField(max_length=16, db_index=True)
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField(db_index=True)
     password_hash = models.CharField(max_length=128)
     code_hash = models.CharField(max_length=128)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
-    last_sent_at = models.DateTimeField(auto_now_add=True)
+    last_sent_at = models.DateTimeField(default=timezone.now)
+    send_count = models.PositiveSmallIntegerField(default=1)
     failed_attempts = models.PositiveSmallIntegerField(default=0)
     request_ip = models.GenericIPAddressField(blank=True, null=True)
+    terms_accepted_at = models.DateTimeField()
+    terms_version = models.CharField(max_length=20)
+    privacy_consent_at = models.DateTimeField()
+    privacy_policy_version = models.CharField(max_length=20)
 
     MAX_FAILED_ATTEMPTS = 5
-    CODE_LIFETIME = timedelta(minutes=5)
+    MAX_SENDS = 5
+    CODE_LIFETIME = timedelta(minutes=10)
+    RESEND_COOLDOWN = timedelta(seconds=60)
 
     @property
     def is_expired(self):
@@ -59,8 +105,72 @@ class RegistrationAttempt(models.Model):
     def is_locked(self):
         return self.failed_attempts >= self.MAX_FAILED_ATTEMPTS
 
+    @property
+    def can_resend(self):
+        return (
+            self.send_count < self.MAX_SENDS
+            and timezone.now() >= self.last_sent_at + self.RESEND_COOLDOWN
+        )
+
     def __str__(self):
-        return f"{self.username} ({self.phone})"
+        return f"{self.username} ({self.email})"
+
+
+class EmailCodeAttempt(models.Model):
+    class Purpose(models.TextChoices):
+        PASSWORD_RESET = "password_reset", "Восстановление пароля"
+        EMAIL_CHANGE = "email_change", "Смена email"
+
+    public_id = models.UUIDField(default=uuid4, editable=False, unique=True)
+    purpose = models.CharField(max_length=20, choices=Purpose.choices, db_index=True)
+    email = models.EmailField(db_index=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="email_code_attempts",
+    )
+    code_hash = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    last_sent_at = models.DateTimeField(default=timezone.now)
+    send_count = models.PositiveSmallIntegerField(default=1)
+    failed_attempts = models.PositiveSmallIntegerField(default=0)
+    verified_at = models.DateTimeField(blank=True, null=True)
+    request_ip = models.GenericIPAddressField(blank=True, null=True)
+
+    MAX_FAILED_ATTEMPTS = 5
+    MAX_SENDS = 5
+    CODE_LIFETIME = timedelta(minutes=10)
+    RESEND_COOLDOWN = timedelta(seconds=60)
+
+    class Meta:
+        ordering = ("-created_at", "-pk")
+        indexes = [
+            models.Index(
+                fields=("purpose", "email", "-created_at"),
+                name="email_code_purpose_idx",
+            ),
+        ]
+
+    @property
+    def is_expired(self):
+        return timezone.now() >= self.expires_at
+
+    @property
+    def is_locked(self):
+        return self.failed_attempts >= self.MAX_FAILED_ATTEMPTS
+
+    @property
+    def can_resend(self):
+        return (
+            self.send_count < self.MAX_SENDS
+            and timezone.now() >= self.last_sent_at + self.RESEND_COOLDOWN
+        )
+
+    def __str__(self):
+        return f"{self.get_purpose_display()}: {self.email}"
 
 
 class Notification(models.Model):

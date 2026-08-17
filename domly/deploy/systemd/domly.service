@@ -1,0 +1,34 @@
+[Unit]
+Description=Domly Gunicorn application server
+After=network-online.target postgresql.service redis-server.service
+Wants=network-online.target
+
+[Service]
+Type=notify
+User=domly
+Group=www-data
+WorkingDirectory=/srv/domly/repo/domly
+EnvironmentFile=/etc/domly/domly.env
+RuntimeDirectory=domly
+RuntimeDirectoryMode=0750
+UMask=0027
+ExecStart=/srv/domly/venv/bin/gunicorn domly.wsgi:application \
+    --bind unix:/run/domly/gunicorn.sock \
+    --workers 3 \
+    --timeout 60 \
+    --max-requests 1000 \
+    --max-requests-jitter 100 \
+    --access-logfile - \
+    --error-logfile -
+ExecReload=/bin/kill -s HUP $MAINPID
+KillSignal=SIGQUIT
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=3
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/srv/domly/repo/domly/media /srv/domly/repo/domly/staticfiles /run/domly
+
+[Install]
+WantedBy=multi-user.target

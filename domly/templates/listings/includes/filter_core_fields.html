@@ -1,38 +1,39 @@
+{% load i18n location_tags %}
 <div class="grid grid-cols-2 gap-3 md:grid-cols-5">
     <label class="block">
-        <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">Сделка</span>
+        <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">{% translate "Сделка" %}</span>
         <select name="deal_type" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-gray-500">
             {% for value, label in deal_types %}<option value="{{ value }}" {% if deal_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
         </select>
     </label>
     <label class="block">
-        <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">Тип</span>
+        <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">{% translate "Тип" %}</span>
         <select name="property_type" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-gray-500">
-            <option value="">Любой</option>
+            <option value="">{% translate "Любой" %}</option>
             {% for value, label in property_types %}<option value="{{ value }}" {% if property_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
         </select>
     </label>
     <label class="block">
-        <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">Цена от</span>
-        <input type="number" min="0" step="1" name="min_price" value="{{ min_price }}" placeholder="Цена от" aria-label="Цена от" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-gray-500">
+        <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">{% translate "Цена от" %}</span>
+        <input type="number" min="0" step="1" name="min_price" value="{{ min_price }}" placeholder="{% translate 'Цена от' %}" aria-label="{% translate 'Цена от' %}" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-gray-500">
     </label>
     <label class="block">
-        <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">Цена до</span>
-        <input type="number" min="0" step="1" name="max_price" value="{{ max_price }}" placeholder="Цена до" aria-label="Цена до" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-gray-500">
+        <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">{% translate "Цена до" %}</span>
+        <input type="number" min="0" step="1" name="max_price" value="{{ max_price }}" placeholder="{% translate 'Цена до' %}" aria-label="{% translate 'Цена до' %}" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-gray-500">
     </label>
     <label class="block md:hidden">
-        <span class="sr-only">Город</span>
-        <select name="city" aria-label="Город" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-gray-500">
-            {% for city in search_cities %}<option value="{{ city }}" {% if result_city == city %}selected{% endif %}>{{ city }}</option>{% endfor %}
+        <span class="sr-only">{% translate "Город" %}</span>
+        <select name="city" aria-label="{% translate 'Город' %}" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-gray-500">
+            {% for city in search_cities %}<option value="{{ city }}" {% if result_city == city %}selected{% endif %}>{{ city|city_label }}</option>{% endfor %}
         </select>
     </label>
     <label class="block md:col-span-1">
-        <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">Сортировка</span>
+        <span class="mb-1.5 hidden text-xs font-medium text-gray-500 md:block">{% translate "Сортировка" %}</span>
         <select name="sort" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-gray-500">
-            {% if query %}<option value="relevance" {% if sort == "relevance" %}selected{% endif %}>Подходящие</option>{% endif %}
-            <option value="newest" {% if sort == "newest" %}selected{% endif %}>Новые</option>
-            <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>Дешевле</option>
-            <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>Дороже</option>
+            {% if query %}<option value="relevance" {% if sort == "relevance" %}selected{% endif %}>{% translate "Подходящие" %}</option>{% endif %}
+            <option value="newest" {% if sort == "newest" %}selected{% endif %}>{% translate "Новые" %}</option>
+            <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>{% translate "Дешевле" %}</option>
+            <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>{% translate "Дороже" %}</option>
         </select>
     </label>
 </div>

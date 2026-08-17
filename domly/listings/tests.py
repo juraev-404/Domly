@@ -1,17 +1,22 @@
 import json
 from datetime import timedelta
 from decimal import Decimal
+from io import BytesIO
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 from urllib.parse import parse_qs, urlparse
 from uuid import uuid4
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
+from PIL import Image
 
 from users.models import Notification, UserBlock
 
@@ -48,6 +53,22 @@ class LocationTests(TestCase):
 
         response = self.client.get(reverse("city_map"))
         self.assertContains(response, "Худжанд")
+
+    def test_catalog_city_selection_uses_stable_localized_city_url(self):
+        with translation.override("en"):
+            catalog_url = reverse("listing_list")
+            set_city_url = reverse("set_city")
+            khujand_url = reverse(
+                "city_listings", kwargs={"city_slug": self.khujand.slug}
+            )
+
+        response = self.client.post(
+            set_city_url,
+            {"city": self.khujand.name, "next": catalog_url},
+        )
+
+        self.assertRedirects(response, khujand_url)
+        self.assertEqual(self.client.session["selected_city"], self.khujand.name)
 
     def test_unknown_city_is_rejected(self):
         response = self.client.post(reverse("set_city"), {"city": "Неизвестный"})
@@ -297,7 +318,7 @@ class HelpPageTests(TestCase):
         self.assertContains(response, "Чем мы можем помочь?")
         self.assertContains(response, "Объявления и модерация")
         self.assertContains(response, "Безопасная сделка")
-        self.assertContains(response, "Восстановление пароля по подтверждённому номеру")
+        self.assertContains(response, "получите шестизначный код на подтверждённый email")
         self.assertContains(response, "Снято с публикации")
         self.assertContains(response, "Продано или сдано")
         self.assertContains(response, "data-help-search")
@@ -571,6 +592,9 @@ class ListingListTests(TestCase):
             reverse("listing_list"),
             {"city": "Худжанд"},
         )
+        expected_url = reverse("city_listings", kwargs={"city_slug": "khujand"})
+        self.assertRedirects(response, expected_url)
+        response = self.client.get(expected_url)
 
         self.assertContains(response, self.other_city.title)
         self.assertNotContains(response, self.published.title)
@@ -649,6 +673,70 @@ class ListingModelTests(TestCase):
             listing.full_clean()
 
 
+class ListingImageProcessingTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        owner = get_user_model().objects.create_user(
+            username="image_owner",
+            email="image-owner@example.com",
+            password="test-password-123",
+        )
+        cls.listing = Listing.objects.create(
+            owner=owner,
+            city=City.objects.get(slug="dushanbe"),
+            deal_type=Listing.DealType.SALE,
+            property_type=Listing.PropertyType.APARTMENT,
+            title="Объявление с оптимизированной фотографией",
+            description="Описание объявления для проверки обработки фотографии.",
+            price="300000.00",
+            address="Улица Рудаки, 20",
+        )
+
+    def make_jpeg_with_metadata(self):
+        output = BytesIO()
+        exif = Image.Exif()
+        exif[274] = 6
+        exif[315] = "private metadata"
+        Image.new("RGB", (3000, 2000), color="blue").save(
+            output,
+            format="JPEG",
+            quality=90,
+            exif=exif,
+        )
+        return SimpleUploadedFile(
+            "large-private-photo.jpg",
+            output.getvalue(),
+            content_type="image/jpeg",
+        )
+
+    def test_listing_image_is_normalized_optimized_and_has_thumbnail(self):
+        with TemporaryDirectory() as media_root, self.settings(MEDIA_ROOT=media_root):
+            listing_image = ListingImage.objects.create(
+                listing=self.listing,
+                image=self.make_jpeg_with_metadata(),
+            )
+
+            self.assertTrue(listing_image.image.name.endswith(".webp"))
+            self.assertIn("/thumbnails/", listing_image.thumbnail.name)
+            self.assertTrue(listing_image.thumbnail.name.endswith(".webp"))
+            with Image.open(listing_image.image.path) as main:
+                self.assertEqual(main.format, "WEBP")
+                self.assertLessEqual(max(main.size), 2400)
+                self.assertFalse(main.getexif())
+            with Image.open(listing_image.thumbnail.path) as thumbnail:
+                self.assertEqual(thumbnail.format, "WEBP")
+                self.assertLessEqual(thumbnail.width, 720)
+                self.assertLessEqual(thumbnail.height, 540)
+
+            stored_paths = (
+                Path(listing_image.image.path),
+                Path(listing_image.thumbnail.path),
+            )
+            with self.captureOnCommitCallbacks(execute=True):
+                listing_image.delete()
+            self.assertTrue(all(not path.exists() for path in stored_paths))
+
+
 class ListingPublicationTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -660,7 +748,21 @@ class ListingPublicationTests(TestCase):
         cls.city = City.objects.get(slug="dushanbe")
 
     def setUp(self):
+        self.media_root = TemporaryDirectory()
+        self.addCleanup(self.media_root.cleanup)
+        self.media_settings = override_settings(MEDIA_ROOT=self.media_root.name)
+        self.media_settings.enable()
+        self.addCleanup(self.media_settings.disable)
         self.client.force_login(self.user)
+
+    def make_image(self, name="apartment.png"):
+        output = BytesIO()
+        Image.new("RGB", (32, 24), color="white").save(output, format="PNG")
+        return SimpleUploadedFile(
+            name,
+            output.getvalue(),
+            content_type="image/png",
+        )
 
     def valid_data(self, **overrides):
         data = {
@@ -727,6 +829,26 @@ class ListingPublicationTests(TestCase):
         self.assertEqual(listing.status, Listing.Status.DRAFT)
         self.assertIsNone(listing.submitted_at)
         self.assertFalse(listing.images.exists())
+        self.assertEqual(listing.contact_phone, "")
+
+    def test_contact_phone_is_optional_and_normalized(self):
+        response = self.client.post(
+            reverse("create"),
+            self.valid_data(action="draft", contact_phone="90 123 45 67"),
+        )
+
+        self.assertRedirects(response, reverse("create"))
+        self.assertEqual(Listing.objects.get().contact_phone, "+992901234567")
+
+    def test_invalid_contact_phone_is_rejected(self):
+        response = self.client.post(
+            reverse("create"),
+            self.valid_data(action="draft", contact_phone="123"),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Введите корректный номер")
+        self.assertFalse(Listing.objects.exists())
 
     def test_publication_requires_an_image(self):
         response = self.client.post(
@@ -739,15 +861,7 @@ class ListingPublicationTests(TestCase):
         self.assertFalse(Listing.objects.exists())
 
     def test_listing_with_image_is_sent_to_moderation(self):
-        image = SimpleUploadedFile(
-            "apartment.gif",
-            (
-                b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00"
-                b"\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00"
-                b"\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
-            ),
-            content_type="image/gif",
-        )
+        image = self.make_image()
         response = self.client.post(
             reverse("create"),
             self.valid_data(action="publish", images=image),
@@ -762,15 +876,7 @@ class ListingPublicationTests(TestCase):
         self.assertEqual(ListingImage.objects.filter(listing=listing).count(), 1)
 
     def test_publication_requires_location_on_map(self):
-        image = SimpleUploadedFile(
-            "apartment.gif",
-            (
-                b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00"
-                b"\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00"
-                b"\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
-            ),
-            content_type="image/gif",
-        )
+        image = self.make_image()
 
         response = self.client.post(
             reverse("create"),
@@ -818,6 +924,7 @@ class ListingDetailTests(TestCase):
             "property_type": Listing.PropertyType.APARTMENT,
             "description": "Подробное описание квартиры для проверки страницы.",
             "price": Decimal("2000.00"),
+            "contact_phone": "+992911112233",
             "address": "Улица Рудаки, 15",
             "rooms": 2,
             "area": Decimal("50.00"),
@@ -847,13 +954,13 @@ class ListingDetailTests(TestCase):
             title="Квартира на модерации",
             status=Listing.Status.PENDING,
         )
-
     def test_published_listing_is_visible_to_everyone(self):
         response = self.client.get(self.published.get_absolute_url())
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.published.title)
-        self.assertContains(response, self.owner.phone)
+        self.assertContains(response, self.published.contact_phone)
+        self.assertNotContains(response, self.owner.phone)
         self.assertContains(response, "/media/listings/test/apartment.jpg")
 
     def test_gallery_has_mobile_slider_and_desktop_lightbox(self):
@@ -876,6 +983,16 @@ class ListingDetailTests(TestCase):
         response = self.client.get(self.pending.get_absolute_url())
 
         self.assertNotContains(response, "Показать расположение на карте")
+
+    def test_listing_without_contact_phone_does_not_fall_back_to_profile_phone(self):
+        self.pending.contact_phone = ""
+        self.pending.save(update_fields=("contact_phone",))
+        self.client.force_login(self.owner)
+
+        response = self.client.get(self.pending.get_absolute_url())
+
+        self.assertNotContains(response, 'href="tel:')
+        self.assertNotContains(response, self.owner.phone)
 
     def test_pending_listing_is_hidden_from_anonymous_users(self):
         response = self.client.get(self.pending.get_absolute_url())
@@ -1384,6 +1501,7 @@ class ListingEditTests(TestCase):
             "description": "Обновлённое подробное описание квартиры после редактирования владельцем.",
             "price": "430000.00",
             "currency": Listing.Currency.TJS,
+            "contact_phone": "90 765 43 21",
             "address": "Улица Рудаки, 31",
             "latitude": "38.575000",
             "longitude": "68.795000",
@@ -1419,6 +1537,7 @@ class ListingEditTests(TestCase):
         self.assertEqual(self.listing.status, Listing.Status.DRAFT)
         self.assertIsNone(self.listing.submitted_at)
         self.assertEqual(self.listing.images.count(), 1)
+        self.assertEqual(self.listing.contact_phone, "+992907654321")
 
     def test_edited_published_listing_returns_to_moderation(self):
         self.client.force_login(self.owner)
@@ -1690,3 +1809,249 @@ class FavoriteTests(TestCase):
 
         self.assertContains(response, self.published.title)
         self.assertContains(response, "Удалить из избранного")
+
+
+class SeoAndLegalTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = get_user_model().objects.create_user(
+            username="seo_owner",
+            email="seo-owner@example.com",
+            password="test-password-123",
+        )
+        cls.city = City.objects.get(slug="dushanbe")
+        common = {
+            "owner": cls.owner,
+            "city": cls.city,
+            "deal_type": Listing.DealType.SALE,
+            "property_type": Listing.PropertyType.APARTMENT,
+            "description": "Подробное описание квартиры для проверки поисковых метаданных.",
+            "price": Decimal("480000.00"),
+            "address": "Проспект Рудаки, 20",
+        }
+        cls.published = Listing.objects.create(
+            **common,
+            title="Квартира для SEO",
+            status=Listing.Status.PUBLISHED,
+            rooms=2,
+            area=Decimal("72.50"),
+            latitude=Decimal("38.573100"),
+            longitude=Decimal("68.786400"),
+        )
+        cls.pending = Listing.objects.create(
+            **common,
+            title="Скрытая квартира",
+            status=Listing.Status.PENDING,
+        )
+        cls.city_listing = Listing.objects.create(
+            **{**common, "deal_type": Listing.DealType.RENT},
+            title="Квартира в городской выдаче",
+            status=Listing.Status.PUBLISHED,
+        )
+
+    def setUp(self):
+        translation.activate("ru")
+
+    def test_public_page_has_local_css_and_complete_basic_metadata(self):
+        response = self.client.get(
+            reverse("listing_list"),
+            secure=True,
+            HTTP_HOST="domly.site",
+        )
+
+        self.assertContains(response, 'href="/static/css/app.css"')
+        self.assertNotContains(response, "cdn.tailwindcss.com")
+        self.assertContains(response, '<meta name="description"')
+        self.assertContains(response, '<meta name="robots" content="index,follow">')
+        self.assertContains(
+            response,
+            '<link rel="canonical" href="https://domly.site/">',
+            html=False,
+        )
+        self.assertContains(response, '<meta property="og:title"')
+        self.assertContains(response, '<meta property="og:url" content="https://domly.site/">')
+
+    def test_private_page_is_not_indexable(self):
+        response = self.client.get(reverse("login"))
+
+        self.assertContains(response, '<meta name="robots" content="noindex,nofollow">')
+
+    def test_listing_metadata_uses_listing_content(self):
+        response = self.client.get(
+            self.published.get_absolute_url(),
+            secure=True,
+            HTTP_HOST="domly.site",
+        )
+
+        self.assertContains(response, '<meta property="og:type" content="article">')
+        self.assertContains(response, "Квартира для SEO — Душанбе | Domly")
+        self.assertContains(response, "Подробное описание квартиры")
+        self.assertContains(
+            response,
+            f'<link rel="canonical" href="https://domly.site{self.published.get_absolute_url()}">',
+            html=False,
+        )
+
+    def test_city_page_has_stable_url_and_only_its_city_listings(self):
+        url = reverse("city_listings", kwargs={"city_slug": self.city.slug})
+        response = self.client.get(
+            url,
+            secure=True,
+            HTTP_HOST="domly.site",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.city_listing.title)
+        self.assertContains(
+            response,
+            f'<link rel="canonical" href="https://domly.site{url}">',
+            html=False,
+        )
+        self.assertContains(response, '<meta name="robots" content="index,follow">')
+        self.assertEqual(self.client.get("/city/not-a-city/").status_code, 404)
+
+    def test_city_filter_redirects_to_the_selected_city_page(self):
+        khujand = City.objects.get(slug="khujand")
+        response = self.client.get(
+            reverse("city_listings", kwargs={"city_slug": self.city.slug}),
+            {"city": khujand.name, "sort": "price_asc"},
+        )
+
+        expected = reverse("city_listings", kwargs={"city_slug": khujand.slug})
+        self.assertRedirects(response, f"{expected}?sort=price_asc")
+
+    def test_listing_has_reciprocal_language_links(self):
+        russian_url = self.published.get_absolute_url()
+        with translation.override("tg"):
+            tajik_url = self.published.get_absolute_url()
+        with translation.override("en"):
+            english_url = self.published.get_absolute_url()
+
+        response = self.client.get(
+            english_url,
+            secure=True,
+            HTTP_HOST="domly.site",
+        )
+
+        self.assertContains(response, '<html lang="en" data-theme="light">', html=False)
+        self.assertContains(response, f'hreflang="ru" href="https://domly.site{russian_url}"')
+        self.assertContains(response, f'hreflang="tg" href="https://domly.site{tajik_url}"')
+        self.assertContains(response, f'hreflang="en" href="https://domly.site{english_url}"')
+        self.assertContains(response, f'hreflang="x-default" href="https://domly.site{russian_url}"')
+        self.assertContains(
+            response,
+            f'<link rel="canonical" href="https://domly.site{english_url}">',
+            html=False,
+        )
+
+    def test_published_listing_has_safe_json_ld(self):
+        unsafe_title = '</script><script>alert("x")</script>'
+        self.published.title = unsafe_title
+        self.published.save(update_fields=["title", "updated_at"])
+        response = self.client.get(
+            self.published.get_absolute_url(),
+            secure=True,
+            HTTP_HOST="domly.site",
+        )
+        html = response.content.decode()
+        marker = '<script type="application/ld+json" id="listing-structured-data">'
+        payload = html.split(marker, 1)[1].split("</script>", 1)[0]
+        data = json.loads(payload)
+
+        self.assertNotIn(unsafe_title, payload)
+        self.assertEqual(data["name"], unsafe_title)
+        self.assertEqual(data["@type"], "RealEstateListing")
+        self.assertEqual(data["offers"]["price"], "480000.00")
+        self.assertEqual(data["offers"]["priceCurrency"], "TJS")
+        self.assertEqual(data["about"]["@type"], "Apartment")
+        self.assertEqual(data["about"]["numberOfRooms"], 2)
+        self.assertEqual(data["about"]["address"]["addressCountry"], "TJ")
+        self.assertEqual(data["about"]["geo"]["latitude"], "38.573100")
+
+    def test_unpublished_preview_is_noindex_and_has_no_json_ld(self):
+        self.client.force_login(self.owner)
+        response = self.client.get(self.pending.get_absolute_url())
+
+        self.assertContains(response, '<meta name="robots" content="noindex,nofollow">')
+        self.assertNotContains(response, 'id="listing-structured-data"')
+
+    def test_sitemap_contains_only_published_listings(self):
+        response = self.client.get(
+            reverse("sitemap"),
+            secure=True,
+            HTTP_HOST="domly.site",
+        )
+        content = response.content.decode()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(f"https://domly.site{self.published.get_absolute_url()}", content)
+        self.assertNotIn(str(self.pending.public_id), content)
+        self.assertIn("https://domly.site/privacy/", content)
+        self.assertIn("https://domly.site/city/dushanbe/", content)
+        self.assertIn("https://domly.site/tg/city/dushanbe/", content)
+        self.assertIn("https://domly.site/en/city/dushanbe/", content)
+        self.assertIn('hreflang="x-default"', content)
+
+    def test_robots_references_sitemap_and_blocks_private_sections(self):
+        response = self.client.get(
+            reverse("robots_txt"),
+            secure=True,
+            HTTP_HOST="domly.site",
+        )
+        content = response.content.decode()
+
+        self.assertEqual(response["Content-Type"], "text/plain; charset=utf-8")
+        self.assertIn("Allow: /", content)
+        self.assertIn("Disallow: /auth/", content)
+        self.assertIn("Disallow: /messages/", content)
+        self.assertIn("Disallow: /tg/messages/", content)
+        self.assertIn("Disallow: /en/messages/", content)
+        self.assertIn("Sitemap: https://domly.site/sitemap.xml", content)
+
+    def test_healthcheck_verifies_database_and_cache(self):
+        response = self.client.get(reverse("healthcheck"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
+
+        head_response = self.client.head(reverse("healthcheck"))
+        self.assertEqual(head_response.status_code, 200)
+
+    def test_legal_pages_are_public_and_linked_from_footer(self):
+        expected = {
+            "privacy_policy": "Политика конфиденциальности",
+            "terms_of_use": "Пользовательское соглашение",
+            "publication_rules": "Правила публикации и модерации",
+        }
+        for url_name, heading in expected.items():
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(url_name))
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, heading)
+                self.assertContains(response, settings.LEGAL_CONTACT_EMAIL)
+                self.assertContains(response, '<meta name="robots" content="index,follow">')
+                self.assertNotContains(response, "Важно перед запуском:")
+
+        privacy = self.client.get(reverse("privacy_policy"))
+        self.assertContains(privacy, "трансграничную передачу")
+        self.assertContains(privacy, "Обладателем базы персональных данных")
+
+        terms = self.client.get(reverse("terms_of_use"))
+        self.assertContains(terms, "не является собственником недвижимости")
+        self.assertContains(terms, "обязательных прав")
+        self.assertContains(terms, "не заменяют договор")
+
+        rules = self.client.get(reverse("publication_rules"))
+        self.assertContains(rules, "Модерация не является юридической экспертизой")
+
+        footer = self.client.get(reverse("listing_list"))
+        for url_name in expected:
+            self.assertContains(footer, reverse(url_name))
+
+    def test_compiled_css_asset_exists_and_contains_responsive_utilities(self):
+        css_path = Path(settings.BASE_DIR) / "static" / "css" / "app.css"
+        css = css_path.read_text(encoding="utf-8")
+
+        self.assertGreater(len(css), 10000)
+        self.assertIn(".md\\:block", css)
+        self.assertIn("html.dark", css)

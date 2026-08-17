@@ -1,17 +1,50 @@
-{% load static i18n %}
+{% load static i18n location_tags %}
+{% get_current_language as current_language %}
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ current_language }}" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Domly{% endblock %}</title>
+    <meta name="description" content="{{ seo_description }}">
+    <meta name="robots" content="{{ seo_robots }}">
+    <link rel="canonical" href="{{ canonical_url }}">
+    {% for alternate in alternate_language_urls %}<link rel="alternate" hreflang="{{ alternate.language }}" href="{{ alternate.url }}">{% endfor %}
+    {% if x_default_url %}<link rel="alternate" hreflang="x-default" href="{{ x_default_url }}">{% endif %}
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .gallery-scrollbar { scrollbar-width: none; }
-        .gallery-scrollbar::-webkit-scrollbar { display: none; }
-    </style>
+    <meta property="og:site_name" content="Domly">
+    <meta property="og:type" content="{{ og_type }}">
+    <meta property="og:title" content="{{ seo_title }}">
+    <meta property="og:description" content="{{ seo_description }}">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:locale" content="{{ og_locale }}">
+    {% for locale in og_locale_alternates %}<meta property="og:locale:alternate" content="{{ locale }}">{% endfor %}
+    {% if og_image_url %}<meta property="og:image" content="{{ og_image_url }}">{% endif %}
+
+    <meta name="twitter:card" content="{% if og_image_url %}summary_large_image{% else %}summary{% endif %}">
+    <meta name="twitter:title" content="{{ seo_title }}">
+    <meta name="twitter:description" content="{{ seo_description }}">
+    {% if og_image_url %}<meta name="twitter:image" content="{{ og_image_url }}">{% endif %}
+
+    <script>
+        (() => {
+            let theme = "light";
+            try {
+                const savedTheme = window.localStorage.getItem("domly-theme");
+                if (savedTheme === "dark" || savedTheme === "light") theme = savedTheme;
+            } catch (error) {
+                // Keep the light default when browser storage is unavailable.
+            }
+            const isDark = theme === "dark";
+            document.documentElement.classList.toggle("dark", isDark);
+            document.documentElement.dataset.theme = theme;
+            document.documentElement.style.colorScheme = theme;
+        })();
+    </script>
+
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% block structured_data %}{% endblock %}
     {% block extra_head %}{% endblock %}
 </head>
 
@@ -22,34 +55,35 @@
     <div class="mx-auto flex h-full w-full max-w-7xl flex-wrap content-start items-center gap-x-3 px-6 lg:px-8">
 
         <!-- LOGO -->
-        <a href="/" class="order-2 mt-2 w-20 shrink-0 text-2xl leading-none tracking-tight">
+        <a href="{% url 'listing_list' %}" class="order-2 mt-2 w-20 shrink-0 text-2xl leading-none tracking-tight">
             Domly
         </a>
 
         <!-- SEARCH -->
-        <form action="/" method="get" class="relative order-3 mt-2 flex h-11 min-w-0 flex-1 items-center gap-2 rounded-2xl bg-[#343232] p-1">
+        <form action="{% url 'listing_list' %}" method="get" class="relative order-3 mt-2 flex h-11 min-w-0 flex-1 items-center gap-2 rounded-2xl bg-[#343232] p-1">
 
-            <svg xmlns="http://www.w3.org/2000/svg" class="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-black" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <svg data-site-search-icon xmlns="http://www.w3.org/2000/svg" class="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-black" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="11" cy="11" r="7"></circle>
                 <path d="m20 20-4-4"></path>
             </svg>
 
             <input
                 type="search"
+                data-site-search
                 name="q"
                 value="{{ request.GET.q|default:'' }}"
-                placeholder="Например: двушка до 5000 в Душанбе"
+                placeholder="{% translate 'Например: двушка до 5000 в Душанбе' %}"
                 class="h-9 min-w-0 flex-1 rounded-xl bg-white py-2 pl-10 pr-4 text-base text-black outline-none placeholder:text-gray-600"
             >
 
             <!-- filter icon (mobile replacement) -->
             <button type="submit" class="h-9 shrink-0 px-3 text-base text-white transition hover:text-gray-300">
-                Найти
+                {% translate "Найти" %}
             </button>
         </form>
 
         <div class="order-4 mt-2 flex min-w-[105px] shrink-0 items-center justify-end gap-2 text-base">
-            <a href="{% url 'city_map' %}" title="Открыть карту города {{ selected_city }}" aria-label="Открыть карту города {{ selected_city }}" class="flex h-7 w-7 shrink-0 items-center justify-center transition hover:text-gray-300">
+            <a href="{% url 'city_map' %}" title="{% blocktranslate with city=selected_city|city_label %}Открыть карту города {{ city }}{% endblocktranslate %}" aria-label="{% blocktranslate with city=selected_city|city_label %}Открыть карту города {{ city }}{% endblocktranslate %}" class="flex h-7 w-7 shrink-0 items-center justify-center transition hover:text-gray-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 -rotate-12 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M21.7 2.3a1 1 0 0 0-1.06-.23l-18 7a1 1 0 0 0 .08 1.89l7.24 2.42 2.42 7.24a1 1 0 0 0 .92.68h.04a1 1 0 0 0 .93-.61l7.66-17.33a1 1 0 0 0-.23-1.06ZM13.5 17.53l-1.77-5.3a1 1 0 0 0-.63-.63L5.8 9.83l13.3-5.17-5.6 12.87Z"></path>
                 </svg>
@@ -57,7 +91,7 @@
 
             <details class="group relative">
                 <summary class="flex cursor-pointer list-none items-center gap-1 transition hover:text-gray-300">
-                    <span>{{ selected_city }}</span>
+                    <span>{{ selected_city|city_label }}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="m6 9 6 6 6-6"></path>
                     </svg>
@@ -69,7 +103,7 @@
                             <input type="hidden" name="city" value="{{ city }}">
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
                             <button type="submit" class="flex w-full items-center justify-between px-4 py-2 text-left hover:bg-gray-100 {% if city == selected_city %}font-semibold{% endif %}">
-                                {{ city }}
+                                {{ city|city_label }}
                                 {% if city == selected_city %}<span aria-hidden="true">✓</span>{% endif %}
                             </button>
                         </form>
@@ -81,38 +115,41 @@
         <!-- DESKTOP MENU -->
         <div class="order-1 flex h-8 w-full translate-y-1 items-center gap-5 text-base">
 
-        <a href="{% url 'help' %}" class="transition hover:text-gray-300">Помощь</a>
-        <a href="{% url 'listing_list' %}#filters" class="mr-auto transition hover:text-gray-300">Фильтр</a>
+        <a href="{% url 'help' %}" class="transition hover:text-gray-300">{% translate "Помощь" %}</a>
+        <a href="{% url 'listing_list' %}#filters" class="transition hover:text-gray-300">{% translate "Фильтр" %}</a>
+        {% include "includes/language_switcher.html" with placement="desktop" %}
+        {% include "includes/theme_toggle.html" with placement="desktop" %}
+        <span class="mr-auto" aria-hidden="true"></span>
 
         {% if user.is_authenticated %}
 
             {% if user.is_moderator or user.is_superuser %}
-                <a href="{% url 'moderation' %}" class="transition hover:text-gray-300">Модерация</a>
-                <a href="{% url 'listing_reports' %}" class="relative transition hover:text-gray-300">Жалобы{% if pending_report_count %}<span class="ml-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ pending_report_count }}</span>{% endif %}</a>
-                <a href="{% url 'moderation_blocks' %}" class="transition hover:text-gray-300">Блокировки</a>
+                <a href="{% url 'moderation' %}" class="transition hover:text-gray-300">{% translate "Модерация" %}</a>
+                <a href="{% url 'listing_reports' %}" class="relative transition hover:text-gray-300">{% translate "Жалобы" %}{% if pending_report_count %}<span class="ml-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ pending_report_count }}</span>{% endif %}</a>
+                <a href="{% url 'moderation_blocks' %}" class="transition hover:text-gray-300">{% translate "Блокировки" %}</a>
             {% else %}
-                <a href="{% url 'create' %}" class="transition hover:text-gray-300">Добавить</a>
+                <a href="{% url 'create' %}" class="transition hover:text-gray-300">{% translate "Добавить" %}</a>
             {% endif %}
 
             <div class="flex items-center gap-1.5">
-            <a href="{% url 'notifications' %}" title="Уведомления" aria-label="Уведомления{% if unread_notification_count %}, непрочитанных: {{ unread_notification_count }}{% endif %}" class="relative flex h-7 w-7 items-center justify-center text-gray-300 transition hover:text-white">
+            <a href="{% url 'notifications' %}" title="{% translate 'Уведомления' %}" aria-label="{% translate 'Уведомления' %}{% if unread_notification_count %}, {% translate 'непрочитанных' %}: {{ unread_notification_count }}{% endif %}" class="relative flex h-7 w-7 items-center justify-center text-gray-300 transition hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
                 {% if unread_notification_count %}<span class="absolute -right-1.5 -top-1.5 min-w-[17px] rounded-full bg-red-500 px-1 text-center text-[10px] font-semibold leading-[17px] text-white">{% if unread_notification_count > 99 %}99+{% else %}{{ unread_notification_count }}{% endif %}</span>{% endif %}
             </a>
-            <a href="{% url 'messages' %}" title="Сообщения" aria-label="Сообщения{% if unread_message_count %}, непрочитанных: {{ unread_message_count }}{% endif %}" class="relative flex h-7 w-7 items-center justify-center text-gray-300 transition hover:text-white">
+            <a href="{% url 'messages' %}" title="{% translate 'Сообщения' %}" aria-label="{% translate 'Сообщения' %}{% if unread_message_count %}, {% translate 'непрочитанных' %}: {{ unread_message_count }}{% endif %}" class="relative flex h-7 w-7 items-center justify-center text-gray-300 transition hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V5a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
                 </svg>
                 {% if unread_message_count %}<span class="absolute -right-1.5 -top-1.5 min-w-[17px] rounded-full bg-red-500 px-1 text-center text-[10px] font-semibold leading-[17px] text-white">{% if unread_message_count > 99 %}99+{% else %}{{ unread_message_count }}{% endif %}</span>{% endif %}
             </a>
 
-            <a href="{% url 'favorites' %}" title="Избранное" aria-label="Избранное" class="flex h-7 w-7 items-center justify-center text-gray-300 transition hover:text-white">
+            <a href="{% url 'favorites' %}" title="{% translate 'Избранное' %}" aria-label="{% translate 'Избранное' %}" class="flex h-7 w-7 items-center justify-center text-gray-300 transition hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1z"></path>
                 </svg>
             </a>
 
-            <a href="{% url 'profile' %}" title="Профиль" aria-label="Профиль" class="flex h-7 w-7 items-center justify-center">
+            <a href="{% url 'profile' %}" title="{% translate 'Профиль' %}" aria-label="{% translate 'Профиль' %}" class="flex h-7 w-7 items-center justify-center">
                 {% if user.avatar %}
                     <img src="{{ user.avatar.url }}" class="h-7 w-7 rounded-full object-cover">
                 {% else %}
@@ -129,7 +166,7 @@
                 <form action="{% url 'logout' %}" method="post" data-logout-form class="flex h-7 items-center">
                     {% csrf_token %}
                     <button type="submit"
-                        title="Выход из аккаунта"
+                        title="{% translate 'Выход из аккаунта' %}"
                         class="flex h-7 w-7 items-center justify-center text-gray-400 transition hover:text-red-400"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -145,9 +182,9 @@
 
         {% else %}
 
-            <a href="{% url 'login' %}" class="hover:text-gray-300">Вход</a>
-            <a href="{% url 'register' %}" class="hover:text-gray-300">Регистрация</a>
-            <a href="{% url 'create' %}" class="hover:text-gray-300">Добавить</a>
+            <a href="{% url 'login' %}" class="hover:text-gray-300">{% translate "Вход" %}</a>
+            <a href="{% url 'register' %}" class="hover:text-gray-300">{% translate "Регистрация" %}</a>
+            <a href="{% url 'create' %}" class="hover:text-gray-300">{% translate "Добавить" %}</a>
 
         {% endif %}
 
@@ -159,13 +196,13 @@
 
 <div class="md:hidden fixed top-0 left-0 w-full h-16 bg-black z-50 px-3 shadow flex items-center">
 
-    <form action="/" method="get" class="w-full flex items-center gap-2">
+    <form action="{% url 'listing_list' %}" method="get" class="w-full flex items-center gap-2">
 
         <input
             type="text"
             name="q"
             value="{{ request.GET.q|default:'' }}"
-            placeholder="Двушка до 5000"
+            placeholder="{% translate 'Двушка до 5000' %}"
             class="flex-1 bg-gray-100 rounded-full px-3 py-2 text-sm outline-none"
         >
 
@@ -180,7 +217,7 @@
             {% if advanced_filters_active %}<span class="absolute right-1 top-1 h-2 w-2 rounded-full bg-green-500" aria-hidden="true"></span>{% endif %}
         </button>
         {% else %}
-        <a href="{% url 'listing_list' %}#filters" aria-label="Фильтр" title="Фильтр" class="p-2 text-white">
+        <a href="{% url 'listing_list' %}#filters" aria-label="{% translate 'Фильтр' %}" title="{% translate 'Фильтр' %}" class="p-2 text-white">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                 <line x1="4" y1="6" x2="20" y2="6"></line>
                 <line x1="7" y1="12" x2="17" y2="12"></line>
@@ -217,48 +254,54 @@
 <footer data-site-footer class="mt-auto bg-black pb-16 text-white md:pb-0">
     <div class="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center text-gray-400">
         <p>© 2026 Domly — {% translate "аренда и продажа недвижимости" %}</p>
+        <nav class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs" aria-label="{% translate 'Юридическая информация' %}">
+            <a href="{% url 'privacy_policy' %}" class="transition hover:text-white">{% translate "Политика конфиденциальности" %}</a>
+            <a href="{% url 'terms_of_use' %}" class="transition hover:text-white">{% translate "Пользовательское соглашение" %}</a>
+            <a href="{% url 'publication_rules' %}" class="transition hover:text-white">{% translate "Правила публикации" %}</a>
+        </nav>
     </div>
 </footer>
 
 <!-- ===================== MOBILE BOTTOM NAV ===================== -->
 <nav class="md:hidden fixed bottom-0 left-0 w-full bg-black border-t flex justify-around py-2 z-50">
 
-    <a href="{% url 'listing_list' %}" aria-label="Главная" class="flex flex-col items-center text-xs text-white hover:text-gray-400">
+    <a href="{% url 'listing_list' %}" aria-label="{% translate 'Главная' %}" class="flex flex-col items-center text-xs text-white hover:text-gray-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M3 10.5 12 3l9 7.5"></path>
             <path d="M5 9v12h14V9"></path>
             <path d="M9 21v-6h6v6"></path>
-        </svg>Главная
+        </svg>{% translate "Главная" %}
     </a>
 
     <a href="{% url 'favorites' %}" class="flex flex-col items-center text-xs text-white hover:text-gray-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M6 3h12a1 1 0 011 1v17l-7-5-7 5V4a1 1 0 011-1z"/>
-        </svg>Избранное
+        </svg>{% translate "Избранное" %}
     </a>
 
     <a href="{% if user.is_moderator or user.is_superuser %}{% url 'moderation' %}{% else %}{% url 'create' %}{% endif %}" class="flex flex-col items-center text-xs text-green-500 hover:text-green-600">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>{% if user.is_moderator or user.is_superuser %}Модерация{% else %}Добавить{% endif %}
+        </svg>{% if user.is_moderator or user.is_superuser %}{% translate "Модерация" %}{% else %}{% translate "Добавить" %}{% endif %}
     </a>
 
     <a href="{% url 'messages' %}" class="relative flex flex-col items-center text-xs text-white hover:text-gray-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M21 15a4 4 0 01-4 4H7l-4 4V5a4 4 0 014-4h10a4 4 0 014 4z"/>
-        </svg>{% if unread_message_count %}<span class="absolute left-1/2 top-[-5px] min-w-[16px] rounded-full bg-red-500 px-1 text-center text-[9px] font-semibold leading-4 text-white">{% if unread_message_count > 99 %}99+{% else %}{{ unread_message_count }}{% endif %}</span>{% endif %}Сообщения
+        </svg>{% if unread_message_count %}<span class="absolute left-1/2 top-[-5px] min-w-[16px] rounded-full bg-red-500 px-1 text-center text-[9px] font-semibold leading-4 text-white">{% if unread_message_count > 99 %}99+{% else %}{{ unread_message_count }}{% endif %}</span>{% endif %}{% translate "Сообщения" %}
     </a>
 
     <a href="{% url 'profile' %}" class="flex flex-col items-center text-xs text-white hover:text-gray-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <circle cx="12" cy="7" r="4"></circle>
             <path d="M5.5 21a6.5 6.5 0 0113 0"></path>
-        </svg>Профиль
+        </svg>{% translate "Профиль" %}
     </a>
 
 </nav>
 
 {% block extra_scripts %}{% endblock %}
+<script src="{% static 'theme.js' %}" defer></script>
 </body>
 </html>

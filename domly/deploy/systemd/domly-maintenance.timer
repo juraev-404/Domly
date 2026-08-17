@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Domly maintenance every day
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target
