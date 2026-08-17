@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Удаление аккаунта" %} — Domly{% endblock %}
+
+{% block content %}
+<section class="mx-auto w-full max-w-xl py-7 md:py-11">
+    <div class="rounded-2xl bg-white p-5 shadow-sm md:p-8">
+        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5M14 11v5"></path></svg>
+        </div>
+        <h1 class="mt-5 text-2xl font-semibold text-gray-950">{% translate "Удалить аккаунт?" %}</h1>
+        <p class="mt-2 text-sm leading-6 text-gray-600">{% translate "Это действие нельзя отменить. Будут удалены профиль, объявления, фотографии, избранное, уведомления и все диалоги." %}</p>
+        <ul class="mt-4 list-disc space-y-2 pl-5 text-sm leading-6 text-gray-600">
+            <li>{% translate "Жалобы на чужие объявления могут сохраниться без ссылки на ваш аккаунт." %}</li>
+            <li>{% translate "Резервные копии удаляются согласно установленному сроку хранения." %}</li>
+        </ul>
+
+        <form method="post" class="mt-6 space-y-4" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{{ form.non_field_errors }}</div>{% endif %}
+            <div>
+                <label for="{{ form.current_password.id_for_label }}" class="mb-1.5 block text-sm font-medium text-gray-700">{{ form.current_password.label }}</label>
+                {{ form.current_password }}
+                {% for error in form.current_password.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+            </div>
+            <div>
+                <label for="{{ form.username.id_for_label }}" class="mb-1.5 block text-sm font-medium text-gray-700">{{ form.username.label }}</label>
+                <p class="mb-1.5 text-xs text-gray-500">{% blocktranslate with username=user.username %}Ваш ник: @{{ username }}{% endblocktranslate %}</p>
+                {{ form.username }}
+                {% for error in form.username.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <a href="{% url 'profile' %}" class="rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-50">{% translate "Вернуться в профиль" %}</a>
+                <button type="submit" class="rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700">{% translate "Удалить навсегда" %}</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

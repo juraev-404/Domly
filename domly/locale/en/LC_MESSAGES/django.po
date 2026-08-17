@@ -855,3 +855,54 @@ msgstr "No photos selected"
 
 msgid "Выбрано фотографий: {count}"
 msgstr "Photos selected: {count}"
+
+msgid "Удаление аккаунта"
+msgstr "Account deletion"
+
+msgid "Профиль и связанные данные будут удалены без возможности восстановления."
+msgstr "Your profile and related data will be deleted and cannot be restored."
+
+msgid "Удалить аккаунт"
+msgstr "Delete account"
+
+msgid "Текущий пароль"
+msgstr "Current password"
+
+msgid "Введите ваш ник для подтверждения"
+msgstr "Enter your username to confirm"
+
+msgid "Неверный текущий пароль."
+msgstr "The current password is incorrect."
+
+msgid "Ник не совпадает с вашим аккаунтом."
+msgstr "The username does not match your account."
+
+msgid "Административный аккаунт нельзя удалить через сайт."
+msgstr "An administrative account cannot be deleted through the website."
+
+msgid "Аккаунт и связанные данные удалены."
+msgstr "The account and related data have been deleted."
+
+msgid "Удалить аккаунт?"
+msgstr "Delete your account?"
+
+msgid "Это действие нельзя отменить. Будут удалены профиль, объявления, фотографии, избранное, уведомления и все диалоги."
+msgstr "This action cannot be undone. Your profile, listings, photos, favorites, notifications, and all conversations will be deleted."
+
+msgid "Жалобы на чужие объявления могут сохраниться без ссылки на ваш аккаунт."
+msgstr "Reports about other users' listings may be retained without a link to your account."
+
+msgid "Резервные копии удаляются согласно установленному сроку хранения."
+msgstr "Backups are deleted according to the established retention period."
+
+msgid "Ваш ник: @%(username)s"
+msgstr "Your username: @%(username)s"
+
+msgid "Вернуться в профиль"
+msgstr "Return to profile"
+
+msgid "Удалить навсегда"
+msgstr "Delete permanently"
+
+msgid "В профиле откройте раздел удаления аккаунта. Подтвердите действие текущим паролем и точным ником; восстановить удалённые данные нельзя."
+msgstr "Open the account deletion section in your profile. Confirm the action with your current password and exact username; deleted data cannot be restored."

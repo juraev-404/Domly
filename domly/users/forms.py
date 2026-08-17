@@ -240,6 +240,39 @@ class EmailChangeForm(EmailForm):
         return password
 
 
+class DeleteAccountForm(forms.Form):
+    current_password = forms.CharField(
+        label=_("Текущий пароль"),
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={"class": INPUT_CLASS, "autocomplete": "current-password"}
+        ),
+    )
+    username = forms.CharField(
+        label=_("Введите ваш ник для подтверждения"),
+        max_length=150,
+        widget=forms.TextInput(
+            attrs={"class": INPUT_CLASS, "autocomplete": "off"}
+        ),
+    )
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_current_password(self):
+        password = self.cleaned_data["current_password"]
+        if not self.user.check_password(password):
+            raise ValidationError(_("Неверный текущий пароль."))
+        return password
+
+    def clean_username(self):
+        username = self.cleaned_data["username"].strip()
+        if username != self.user.username:
+            raise ValidationError(_("Ник не совпадает с вашим аккаунтом."))
+        return username
+
+
 class NewPasswordForm(forms.Form):
     password1 = forms.CharField(
         label="Новый пароль",

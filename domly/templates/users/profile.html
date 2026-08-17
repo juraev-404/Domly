@@ -114,6 +114,13 @@
                     <button type="submit" class="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-medium hover:border-gray-500 sm:col-span-2 sm:justify-self-start">{% translate "Отправить код" %}</button>
                 </form>
             </div>
+            {% if not user.is_staff and not user.is_superuser %}
+                <div class="mt-8 max-w-2xl border-t border-gray-200 pt-7">
+                    <h3 class="font-semibold text-gray-950">{% translate "Удаление аккаунта" %}</h3>
+                    <p class="mt-1 text-sm text-gray-500">{% translate "Профиль и связанные данные будут удалены без возможности восстановления." %}</p>
+                    <a href="{% url 'delete_account' %}" class="mt-4 inline-flex rounded-xl border border-red-300 px-5 py-2.5 text-sm font-medium text-red-700 transition hover:bg-red-50">{% translate "Удалить аккаунт" %}</a>
+                </div>
+            {% endif %}
         </div>
     {% else %}
         <div class="mb-5 flex items-end justify-between gap-4">

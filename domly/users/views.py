@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.exceptions import ValidationError
+from django.http import HttpResponseForbidden
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import BooleanField, Exists, OuterRef, Value
@@ -18,7 +19,9 @@ from django.views.decorators.http import require_http_methods, require_POST
 
 from listings.models import Favorite, Listing
 
+from .account_deletion import delete_user_account
 from .forms import (
+    DeleteAccountForm,
     EmailChangeForm,
     EmailForm,
     LegalAcceptanceForm,
@@ -491,6 +494,25 @@ def profile_view(request):
             "email_change_form": EmailChangeForm(user=request.user),
         },
     )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def delete_account_view(request):
+    if request.user.is_staff or request.user.is_superuser:
+        return HttpResponseForbidden(
+            _("Административный аккаунт нельзя удалить через сайт.")
+        )
+
+    form = DeleteAccountForm(request.POST or None, user=request.user)
+    if request.method == "POST" and form.is_valid():
+        user = request.user
+        delete_user_account(user)
+        logout(request)
+        messages.success(request, _("Аккаунт и связанные данные удалены."))
+        return redirect("listing_list")
+
+    return render(request, "users/delete_account.html", {"form": form})
 
 
 @login_required

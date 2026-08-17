@@ -14,6 +14,7 @@ urlpatterns = [
     path("auth/password-reset/new/", views.password_reset_new, name="password_reset_new"),
     path("auth/logout/", views.logout_view, name="logout"),
     path("profile/", views.profile_view, name="profile"),
+    path("profile/delete/", views.delete_account_view, name="delete_account"),
     path("profile/email/change/", views.email_change_request, name="email_change_request"),
     path("profile/email/verify/", views.email_change_verify, name="email_change_verify"),
     path("profile/email/resend/", views.resend_email_change_code, name="resend_email_change_code"),

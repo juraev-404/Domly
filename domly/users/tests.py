@@ -13,7 +13,8 @@ from django.utils import timezone, translation
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 
-from listings.models import City, Favorite, Listing
+from chat.models import Conversation, Message as ChatMessage
+from listings.models import City, Favorite, Listing, ListingReport
 
 from .models import EmailCodeAttempt, Notification, RegistrationAttempt, User
 
@@ -633,6 +634,151 @@ class ProfileTests(TestCase):
         self.assertNotContains(catalog_response, 'title="Выход из аккаунта"')
         self.assertNotContains(listings_response, 'title="Выход из аккаунта"')
         self.assertNotContains(listings_response, "data-logout-dialog")
+
+
+class AccountDeletionTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            username="delete_me",
+            email="delete-me@example.com",
+            password="SafePassword-934",
+            is_email_verified=True,
+        )
+        cls.other = User.objects.create_user(
+            username="remaining_user",
+            email="remaining@example.com",
+            password="SafePassword-934",
+        )
+        city = City.objects.get(slug="dushanbe")
+        cls.owned_listing = Listing.objects.create(
+            owner=cls.user,
+            city=city,
+            deal_type=Listing.DealType.SALE,
+            property_type=Listing.PropertyType.APARTMENT,
+            status=Listing.Status.PUBLISHED,
+            title="Объявление удаляемого пользователя",
+            description="Описание",
+            price="100000.00",
+            address="Душанбе",
+        )
+        cls.other_listing = Listing.objects.create(
+            owner=cls.other,
+            city=city,
+            deal_type=Listing.DealType.RENT,
+            property_type=Listing.PropertyType.APARTMENT,
+            status=Listing.Status.PUBLISHED,
+            title="Объявление другого пользователя",
+            description="Описание",
+            price="3000.00",
+            address="Душанбе",
+        )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def test_delete_account_page_requires_login_and_is_linked_from_profile(self):
+        profile = self.client.get(reverse("profile"))
+        self.assertContains(profile, reverse("delete_account"))
+        self.assertContains(profile, "Удалить аккаунт")
+
+        self.client.logout()
+        response = self.client.get(reverse("delete_account"))
+        self.assertRedirects(
+            response,
+            f"{reverse('login')}?next={reverse('delete_account')}",
+        )
+
+    def test_delete_account_page_is_translated(self):
+        with translation.override("en"):
+            english = self.client.get(reverse("delete_account"))
+            english_help = self.client.get(reverse("help"))
+        self.assertContains(english, "Delete permanently")
+        self.assertContains(english, "Enter your username to confirm")
+        self.assertContains(english_help, "Open the account deletion section")
+
+        with translation.override("tg"):
+            tajik = self.client.get(reverse("delete_account"))
+            tajik_help = self.client.get(reverse("help"))
+        self.assertContains(tajik, "Тамоман нест кардан")
+        self.assertContains(tajik, "Номи корбарии худро барои тасдиқ ворид кунед")
+        self.assertContains(tajik_help, "Дар профил бахши нест кардани аккаунтро кушоед")
+
+    def test_delete_account_requires_correct_password_and_exact_username(self):
+        wrong_password = self.client.post(
+            reverse("delete_account"),
+            {"current_password": "wrong", "username": self.user.username},
+        )
+        self.assertContains(wrong_password, "Неверный текущий пароль")
+        self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
+
+        wrong_username = self.client.post(
+            reverse("delete_account"),
+            {"current_password": "SafePassword-934", "username": "DELETE_ME"},
+        )
+        self.assertContains(wrong_username, "Ник не совпадает")
+        self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
+
+    def test_staff_account_cannot_be_deleted_through_public_page(self):
+        self.user.is_staff = True
+        self.user.save(update_fields=("is_staff",))
+
+        response = self.client.post(
+            reverse("delete_account"),
+            {
+                "current_password": "SafePassword-934",
+                "username": self.user.username,
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
+
+    def test_confirmed_deletion_removes_owned_data_and_anonymizes_report(self):
+        conversation = Conversation.objects.create()
+        conversation.participants.add(self.user, self.other)
+        ChatMessage.objects.create(
+            conversation=conversation,
+            sender=self.other,
+            body="Сообщение в удаляемом диалоге",
+        )
+        report = ListingReport.objects.create(
+            listing=self.other_listing,
+            reporter=self.user,
+            reason=ListingReport.Reason.OTHER,
+            details="Жалоба должна остаться без автора",
+        )
+        Favorite.objects.create(user=self.user, listing=self.other_listing)
+        RegistrationAttempt.objects.create(
+            username=self.user.username,
+            email=self.user.email,
+            password_hash="unused",
+            code_hash="unused",
+            expires_at=timezone.now() + timedelta(minutes=10),
+            terms_accepted_at=timezone.now(),
+            terms_version=settings.LEGAL_TERMS_VERSION,
+            privacy_consent_at=timezone.now(),
+            privacy_policy_version=settings.LEGAL_PRIVACY_VERSION,
+        )
+        user_pk = self.user.pk
+        listing_pk = self.owned_listing.pk
+
+        response = self.client.post(
+            reverse("delete_account"),
+            {
+                "current_password": "SafePassword-934",
+                "username": self.user.username,
+            },
+        )
+
+        self.assertRedirects(response, reverse("listing_list"))
+        self.assertFalse(User.objects.filter(pk=user_pk).exists())
+        self.assertFalse(Listing.objects.filter(pk=listing_pk).exists())
+        self.assertFalse(Conversation.objects.filter(pk=conversation.pk).exists())
+        self.assertFalse(RegistrationAttempt.objects.filter(email="delete-me@example.com").exists())
+        report.refresh_from_db()
+        self.assertIsNone(report.reporter)
+        self.assertNotIn("_auth_user_id", self.client.session)
 
 
 class PublicProfileTests(TestCase):
