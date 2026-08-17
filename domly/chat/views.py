@@ -5,6 +5,7 @@ from django.db.models import Count, Exists, F, OuterRef, Q, Subquery
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from django.utils.translation import gettext as _
 
 from listings.models import Listing
 
@@ -190,7 +191,7 @@ def conversation_events(request, public_id):
     try:
         after_id = max(int(request.GET.get("after", 0)), 0)
     except (TypeError, ValueError):
-        return JsonResponse({"error": "Некорректный курсор."}, status=400)
+        return JsonResponse({"error": _("Некорректный курсор.")}, status=400)
 
     mark_conversation_read(conversation=conversation, reader=request.user)
     new_messages = list(
@@ -222,5 +223,5 @@ def delete_conversation(request, public_id):
     )
     if _wants_json(request):
         return JsonResponse({"deleted": True})
-    flash_messages.success(request, "Чат удалён у вас.")
+    flash_messages.success(request, _("Чат удалён у вас."))
     return redirect("messages")

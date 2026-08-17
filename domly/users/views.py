@@ -84,10 +84,10 @@ def _resend_code(request, *, model, session_key, purpose, redirect_name):
         request.session.pop(session_key, None)
         return redirect(redirect_name)
     if attempt.send_count >= attempt.MAX_SENDS:
-        messages.error(request, "Достигнут лимит отправок. Начните процесс заново позже.")
+        messages.error(request, _("Достигнут лимит отправок. Начните процесс заново позже."))
         return redirect(redirect_name)
     if not attempt.can_resend:
-        messages.error(request, "Новый код можно запросить через минуту.")
+        messages.error(request, _("Новый код можно запросить через минуту."))
         return redirect(redirect_name)
 
     try:
@@ -99,11 +99,11 @@ def _resend_code(request, *, model, session_key, purpose, redirect_name):
             attempt.failed_attempts = 0
             attempt.save(update_fields=("last_sent_at", "expires_at", "failed_attempts"))
     except Exception:
-        messages.error(request, "Не удалось отправить письмо. Попробуйте позже.")
+        messages.error(request, _("Не удалось отправить письмо. Попробуйте позже."))
     else:
         attempt.send_count += 1
         attempt.save(update_fields=("send_count",))
-        messages.success(request, "Новый код отправлен на email.")
+        messages.success(request, _("Новый код отправлен на email."))
     return redirect(redirect_name)
 
 
@@ -128,7 +128,7 @@ def login_view(request):
         )
         if user is None:
             record_login_failure(request=request, identifier=identifier)
-            form.add_error(None, "Неверные данные для входа.")
+            form.add_error(None, _("Неверные данные для входа."))
         else:
             clear_login_failures(request=request, identifier=identifier)
             login(request, user)
@@ -197,7 +197,7 @@ def register_view(request):
         ip = _client_ip(request)
         email = form.cleaned_data["email"]
         if _code_rate_limited(RegistrationAttempt, ip=ip, email=email):
-            form.add_error(None, "Слишком много запросов. Попробуйте позже.")
+            form.add_error(None, _("Слишком много запросов. Попробуйте позже."))
         else:
             code = generate_verification_code()
             accepted_at = timezone.now()
@@ -221,7 +221,7 @@ def register_view(request):
                 )
             except Exception:
                 attempt.delete()
-                form.add_error(None, "Не удалось отправить код. Попробуйте позже.")
+                form.add_error(None, _("Не удалось отправить код. Попробуйте позже."))
             else:
                 request.session[REGISTRATION_SESSION_KEY] = attempt.pk
                 return redirect("verify")
@@ -247,13 +247,13 @@ def verify_view(request):
             with transaction.atomic():
                 attempt = RegistrationAttempt.objects.select_for_update().get(pk=attempt_id)
                 if attempt.is_expired:
-                    form.add_error(None, "Срок действия кода истёк. Зарегистрируйтесь снова.")
+                    form.add_error(None, _("Срок действия кода истёк. Зарегистрируйтесь снова."))
                 elif attempt.is_locked:
-                    form.add_error(None, "Превышено число попыток. Зарегистрируйтесь снова.")
+                    form.add_error(None, _("Превышено число попыток. Зарегистрируйтесь снова."))
                 elif not check_password(form.cleaned_data["code"], attempt.code_hash):
                     attempt.failed_attempts += 1
                     attempt.save(update_fields=["failed_attempts"])
-                    form.add_error(None, "Неверный код.")
+                    form.add_error(None, _("Неверный код."))
                 else:
                     created_user = User(
                         username=attempt.username,
@@ -269,7 +269,7 @@ def verify_view(request):
                     created_user.save()
                     attempt.delete()
         except (IntegrityError, ValidationError):
-            form.add_error(None, "Ник или email уже зарегистрирован.")
+            form.add_error(None, _("Ник или email уже зарегистрирован."))
         else:
             if created_user is not None:
                 request.session.pop(REGISTRATION_SESSION_KEY, None)
@@ -299,7 +299,7 @@ def password_reset_request(request):
         ip = _client_ip(request)
         email = form.cleaned_data["email"]
         if _code_rate_limited(EmailCodeAttempt, ip=ip, email=email):
-            form.add_error(None, "Слишком много запросов. Попробуйте позже.")
+            form.add_error(None, _("Слишком много запросов. Попробуйте позже."))
         else:
             user = User.objects.filter(
                 email__iexact=email,
@@ -324,7 +324,7 @@ def password_reset_request(request):
                     )
             except Exception:
                 attempt.delete()
-                form.add_error(None, "Не удалось отправить письмо. Попробуйте позже.")
+                form.add_error(None, _("Не удалось отправить письмо. Попробуйте позже."))
             else:
                 request.session[PASSWORD_RESET_SESSION_KEY] = attempt.pk
                 return redirect("password_reset_verify")
@@ -346,16 +346,16 @@ def password_reset_verify(request):
         with transaction.atomic():
             attempt = EmailCodeAttempt.objects.select_for_update().get(pk=attempt.pk)
             if attempt.is_expired:
-                form.add_error(None, "Срок действия кода истёк. Запросите новый код.")
+                form.add_error(None, _("Срок действия кода истёк. Запросите новый код."))
             elif attempt.is_locked:
-                form.add_error(None, "Превышено число попыток. Начните восстановление заново.")
+                form.add_error(None, _("Превышено число попыток. Начните восстановление заново."))
             elif (
                 not check_password(form.cleaned_data["code"], attempt.code_hash)
                 or attempt.user_id is None
             ):
                 attempt.failed_attempts += 1
                 attempt.save(update_fields=("failed_attempts",))
-                form.add_error(None, "Неверный код.")
+                form.add_error(None, _("Неверный код."))
             else:
                 attempt.verified_at = timezone.now()
                 attempt.save(update_fields=("verified_at",))
@@ -400,7 +400,7 @@ def password_reset_new(request):
             purpose=EmailCodeAttempt.Purpose.PASSWORD_RESET,
         ).delete()
         request.session.pop(PASSWORD_RESET_SESSION_KEY, None)
-        messages.success(request, "Пароль изменён. Теперь можно войти.")
+        messages.success(request, _("Пароль изменён. Теперь можно войти."))
         return redirect("login")
     return render(request, "users/password_reset_new.html", {"form": form})
 
@@ -484,7 +484,7 @@ def profile_view(request):
     form = ProfileForm(request.POST or None, request.FILES or None, instance=request.user)
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.success(request, "Данные профиля обновлены.")
+        messages.success(request, _("Данные профиля обновлены."))
         return redirect("profile")
     return render(
         request,
@@ -534,7 +534,7 @@ def email_change_request(request):
     ip = _client_ip(request)
     email = form.cleaned_data["email"]
     if _code_rate_limited(EmailCodeAttempt, ip=ip, email=email):
-        form.add_error(None, "Слишком много запросов. Попробуйте позже.")
+        form.add_error(None, _("Слишком много запросов. Попробуйте позже."))
         profile_form = ProfileForm(instance=request.user)
         return render(
             request,
@@ -559,7 +559,7 @@ def email_change_request(request):
         send_email_code(email=email, code=code, purpose="email_change")
     except Exception:
         attempt.delete()
-        form.add_error(None, "Не удалось отправить письмо. Попробуйте позже.")
+        form.add_error(None, _("Не удалось отправить письмо. Попробуйте позже."))
         profile_form = ProfileForm(instance=request.user)
         return render(
             request,
@@ -593,15 +593,15 @@ def email_change_verify(request):
             with transaction.atomic():
                 attempt = EmailCodeAttempt.objects.select_for_update().get(pk=attempt.pk)
                 if attempt.is_expired:
-                    form.add_error(None, "Срок действия кода истёк. Запросите новый код.")
+                    form.add_error(None, _("Срок действия кода истёк. Запросите новый код."))
                 elif attempt.is_locked:
-                    form.add_error(None, "Превышено число попыток. Начните смену email заново.")
+                    form.add_error(None, _("Превышено число попыток. Начните смену email заново."))
                 elif not check_password(form.cleaned_data["code"], attempt.code_hash):
                     attempt.failed_attempts += 1
                     attempt.save(update_fields=("failed_attempts",))
-                    form.add_error(None, "Неверный код.")
+                    form.add_error(None, _("Неверный код."))
                 elif User.objects.exclude(pk=request.user.pk).filter(email__iexact=attempt.email).exists():
-                    form.add_error(None, "Этот email уже используется.")
+                    form.add_error(None, _("Этот email уже используется."))
                 else:
                     request.user.email = attempt.email
                     request.user.is_email_verified = True
@@ -611,11 +611,11 @@ def email_change_verify(request):
                         purpose=EmailCodeAttempt.Purpose.EMAIL_CHANGE,
                     ).delete()
         except IntegrityError:
-            form.add_error(None, "Этот email уже используется.")
+            form.add_error(None, _("Этот email уже используется."))
         else:
             if not form.errors:
                 request.session.pop(EMAIL_CHANGE_SESSION_KEY, None)
-                messages.success(request, "Новый email подтверждён.")
+                messages.success(request, _("Новый email подтверждён."))
                 return redirect("profile")
     return render(
         request,

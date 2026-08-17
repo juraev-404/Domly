@@ -37,11 +37,15 @@ class LocationTests(TestCase):
         cls.dushanbe = City.objects.get(slug="dushanbe")
         cls.khujand = City.objects.get(slug="khujand")
 
+    def setUp(self):
+        translation.activate("ru")
+
     def test_map_uses_default_city(self):
         response = self.client.get(reverse("city_map"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Душанбе")
-        self.assertContains(response, 'id="city-map" class="relative z-0')
+        self.assertContains(response, 'id="city-map"', html=False)
+        self.assertContains(response, 'class="relative z-0', html=False)
         self.assertContains(response, "map.attributionControl.setPrefix(false)")
         self.assertContains(response, ".leaflet-control-attribution")
 
@@ -84,6 +88,25 @@ class LocationTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.url.startswith(f"{reverse('login')}?next="))
+
+    def test_geocode_validation_error_follows_active_language(self):
+        self.client.force_login(self.owner)
+        cases = {
+            "en": "Enter a more specific address.",
+            "tg": "Нишонии дақиқтарро ворид кунед.",
+        }
+
+        for language, expected_error in cases.items():
+            with self.subTest(language=language):
+                with translation.override(language):
+                    geocode_url = reverse("geocode_location")
+                response = self.client.get(
+                    geocode_url,
+                    {"city": self.dushanbe.name, "address": "1"},
+                )
+
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(response.json()["error"], expected_error)
 
     @patch("listings.views.geocode_address")
     def test_geocode_endpoint_returns_address_coordinates(self, geocode):
@@ -154,7 +177,7 @@ class LocationTests(TestCase):
         self.assertEqual(response.context["map_listings"][0]["price"], "480000")
         self.assertContains(response, mapped.title)
         self.assertNotContains(response, "Черновик с координатами")
-        self.assertContains(response, "Объявлений без точного места на карте: 1")
+        self.assertContains(response, "Без точного места на карте: 1")
 
         focused_response = self.client.get(
             reverse("city_map"),
@@ -340,6 +363,25 @@ class HelpPageTests(TestCase):
         response = self.client.post(reverse("help"))
 
         self.assertEqual(response.status_code, 405)
+
+    def test_help_page_is_translated_to_english_and_tajik(self):
+        cases = {
+            "en": ("Domly Help Center", "How can we help?", "Safe transaction"),
+            "tg": ("Маркази кӯмаки Domly", "Чӣ гуна кӯмак карда метавонем?", "Муомилаи бехатар"),
+        }
+
+        for language, expected_texts in cases.items():
+            with self.subTest(language=language):
+                self.client.cookies.clear()
+                with translation.override(language):
+                    help_url = reverse("help")
+                response = self.client.get(help_url)
+
+                self.assertEqual(response.status_code, 200)
+                for text in expected_texts:
+                    self.assertContains(response, text)
+                self.assertNotContains(response, "Чем мы можем помочь?")
+                self.assertNotContains(response, "Безопасная сделка")
 
     def test_home_links_to_help_and_footer_clears_mobile_navigation(self):
         response = self.client.get(reverse("listing_list"))

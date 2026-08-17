@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 
 class MultipleImageInput(forms.ClearableFileInput):
@@ -15,16 +16,16 @@ class MultipleImageField(forms.ImageField):
         files = data if isinstance(data, (list, tuple)) else [data]
         images = [super(MultipleImageField, self).clean(file, initial) for file in files]
         if len(images) > 5:
-            raise ValidationError("Можно прикрепить не более 5 фотографий.")
+            raise ValidationError(_("Можно прикрепить не более 5 фотографий."))
 
         allowed_types = {"image/jpeg", "image/png", "image/webp"}
         for image in images:
             if image.size > 10 * 1024 * 1024:
-                raise ValidationError("Каждая фотография должна быть не больше 10 МБ.")
+                raise ValidationError(_("Каждая фотография должна быть не больше 10 МБ."))
             if image.content_type not in allowed_types:
-                raise ValidationError("Поддерживаются JPEG, PNG и WebP.")
+                raise ValidationError(_("Поддерживаются JPEG, PNG и WebP."))
             if image.image.width * image.image.height > 40_000_000:
-                raise ValidationError("Разрешение фотографии слишком большое.")
+                raise ValidationError(_("Разрешение фотографии слишком большое."))
         return images
 
 
@@ -46,7 +47,7 @@ class MessageForm(forms.Form):
         widget=forms.Textarea(
             attrs={
                 "rows": 1,
-                "placeholder": "Напишите сообщение…",
+                "placeholder": _("Напишите сообщение…"),
                 "autocomplete": "off",
                 "class": (
                     "min-h-11 max-h-32 w-full resize-none rounded-2xl border "
@@ -63,5 +64,5 @@ class MessageForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         if not cleaned_data.get("body") and not cleaned_data.get("images"):
-            raise ValidationError("Введите сообщение или прикрепите фотографию.")
+            raise ValidationError(_("Введите сообщение или прикрепите фотографию."))
         return cleaned_data

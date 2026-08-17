@@ -144,10 +144,10 @@ def create_listing(request):
         if submit_action == "publish":
             messages.success(
                 request,
-                "Объявление отправлено на модерацию.",
+                _("Объявление отправлено на модерацию."),
             )
         else:
-            messages.success(request, "Черновик объявления сохранён.")
+            messages.success(request, _("Черновик объявления сохранён."))
         return redirect("create")
 
     return render(
@@ -208,9 +208,9 @@ def edit_listing(request, public_id):
                 )
 
         if submit_action == "publish":
-            messages.success(request, "Изменения сохранены, объявление отправлено на модерацию.")
+            messages.success(request, _("Изменения сохранены, объявление отправлено на модерацию."))
         else:
-            messages.success(request, "Изменения сохранены в черновике.")
+            messages.success(request, _("Изменения сохранены в черновике."))
         return redirect(listing.get_absolute_url())
 
     return render(
@@ -674,10 +674,10 @@ def toggle_favorite(request, public_id):
         listing=listing,
     )
     if created:
-        messages.success(request, "Объявление добавлено в избранное.")
+        messages.success(request, _("Объявление добавлено в избранное."))
     else:
         favorite.delete()
-        messages.success(request, "Объявление удалено из избранного.")
+        messages.success(request, _("Объявление удалено из избранного."))
 
     next_url = request.POST.get("next", "")
     if not url_has_allowed_host_and_scheme(
@@ -1068,7 +1068,7 @@ def moderation_reject(request, public_id):
 def set_city(request):
     city = request.POST.get("city", "")
     if city not in CITIES:
-        return HttpResponseBadRequest("Неизвестный город")
+        return HttpResponseBadRequest(_("Неизвестный город"))
 
     request.session[CITY_SESSION_KEY] = city
     next_url = request.POST.get("next", "")
@@ -1098,29 +1098,29 @@ def geocode_location(request):
     city_name = request.GET.get("city", "").strip()
     if len(address) < 5:
         return JsonResponse(
-            {"error": "Введите более точный адрес."},
+            {"error": _("Введите более точный адрес.")},
             status=400,
         )
     city = City.objects.filter(name=city_name, is_active=True).first()
     if city is None:
-        return JsonResponse({"error": "Выберите город из списка."}, status=400)
+        return JsonResponse({"error": _("Выберите город из списка.")}, status=400)
 
     try:
         result = geocode_address(city=city, address=address)
     except GeocodingRateLimited:
         return JsonResponse(
-            {"error": "Повторите поиск адреса через секунду."},
+            {"error": _("Повторите поиск адреса через секунду.")},
             status=429,
         )
     except GeocodingUnavailable:
         return JsonResponse(
-            {"error": "Сервис поиска адресов временно недоступен."},
+            {"error": _("Сервис поиска адресов временно недоступен.")},
             status=503,
         )
 
     if result is None:
         return JsonResponse(
-            {"error": "Адрес не найден. Уточните его или поставьте точку вручную."},
+            {"error": _("Адрес не найден. Уточните его или поставьте точку вручную.")},
             status=404,
         )
     return JsonResponse(result)

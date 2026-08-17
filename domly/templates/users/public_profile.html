@@ -1,13 +1,14 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}{{ profile_user.username }} — автор на Domly{% endblock %}
+{% block title %}{% blocktranslate with username=profile_user.username %}{{ username }} — автор на Domly{% endblocktranslate %}{% endblock %}
 
 {% block content %}
 <section class="w-full min-w-0 py-5 md:py-8">
     <div class="rounded-2xl bg-white p-5 shadow-sm md:p-7">
         <div class="flex items-center gap-4 md:gap-5">
             {% if profile_user.avatar %}
-                <img src="{{ profile_user.avatar.url }}" alt="Аватар {{ profile_user.username }}" class="h-20 w-20 shrink-0 rounded-full object-cover md:h-24 md:w-24">
+                <img src="{{ profile_user.avatar.url }}" alt="{% blocktranslate with username=profile_user.username %}Аватар {{ username }}{% endblocktranslate %}" class="h-20 w-20 shrink-0 rounded-full object-cover md:h-24 md:w-24">
             {% else %}
                 <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-gray-900 text-3xl font-semibold text-white md:h-24 md:w-24">{{ profile_user.username|first|upper }}</div>
             {% endif %}
@@ -16,20 +17,20 @@
                 <h1 class="truncate text-xl font-semibold text-gray-950 md:text-2xl">{{ profile_user.get_full_name|default:profile_user.username }}</h1>
                 <p class="truncate text-sm text-gray-500">@{{ profile_user.username }}</p>
                 <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 sm:text-sm">
-                    <span>На Domly с {{ profile_user.date_joined|date:"m.Y" }}</span>
-                    <span>{{ listing_count }} опубликованн{{ listing_count|pluralize:"ое,ых" }} объявлени{{ listing_count|pluralize:"е,й" }}</span>
+                    <span>{% blocktranslate with joined=profile_user.date_joined|date:"m.Y" %}На Domly с {{ joined }}{% endblocktranslate %}</span>
+                    <span>{% blocktranslate with count=listing_count %}Опубликовано объявлений: {{ count }}{% endblocktranslate %}</span>
                 </div>
             </div>
 
             {% if user.is_authenticated and user.pk == profile_user.pk %}
-                <a href="{% url 'profile' %}" class="hidden shrink-0 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-900 transition hover:border-gray-500 sm:inline-flex">Редактировать профиль</a>
+                <a href="{% url 'profile' %}" class="hidden shrink-0 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-900 transition hover:border-gray-500 sm:inline-flex">{% translate "Редактировать профиль" %}</a>
             {% endif %}
         </div>
     </div>
 
     <div class="mb-5 mt-7">
-        <h2 class="text-xl font-semibold text-gray-950">Объявления автора</h2>
-        <p class="mt-1 text-sm text-gray-500">Только опубликованные объявления, доступные другим пользователям.</p>
+        <h2 class="text-xl font-semibold text-gray-950">{% translate "Объявления автора" %}</h2>
+        <p class="mt-1 text-sm text-gray-500">{% translate "Только опубликованные объявления, доступные другим пользователям." %}</p>
     </div>
 
     {% if page_obj %}
@@ -38,15 +39,15 @@
         </div>
 
         {% if page_obj.has_other_pages %}
-            <nav class="mt-7 flex items-center justify-center gap-3" aria-label="Страницы объявлений автора">
-                {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700">Назад</a>{% endif %}
-                <span class="text-sm text-gray-500">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
-                {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700">Дальше</a>{% endif %}
+            <nav class="mt-7 flex items-center justify-center gap-3" aria-label="{% translate 'Страницы объявлений автора' %}">
+                {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700">{% translate "Назад" %}</a>{% endif %}
+                <span class="text-sm text-gray-500">{% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}{{ current }} из {{ total }}{% endblocktranslate %}</span>
+                {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700">{% translate "Дальше" %}</a>{% endif %}
             </nav>
         {% endif %}
     {% else %}
         <div class="rounded-2xl border border-dashed border-gray-300 bg-white px-5 py-14 text-center">
-            <h3 class="font-medium text-gray-900">У автора пока нет опубликованных объявлений</h3>
+            <h3 class="font-medium text-gray-900">{% translate "У автора пока нет опубликованных объявлений" %}</h3>
         </div>
     {% endif %}
 </section>

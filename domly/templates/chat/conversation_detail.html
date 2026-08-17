@@ -5,7 +5,7 @@
 
 {% block content %}
 <section class="mx-auto w-full max-w-3xl py-3 md:py-7">
-    <div data-chat-root data-events-url="{% url 'conversation_events' conversation.public_id %}" class="flex h-[calc(100dvh-9.25rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm md:h-[650px] md:max-h-[calc(100dvh-10rem)]">
+    <div data-chat-root data-events-url="{% url 'conversation_events' conversation.public_id %}" data-i18n-open-photo="{% translate 'Открыть фотографию {current} из {total}' %}" data-i18n-connection-retry="{% translate 'Нет соединения. Повторяем попытку…' %}" data-i18n-message-required="{% translate 'Введите сообщение или прикрепите фотографию.' %}" data-i18n-sending="{% translate 'Отправка…' %}" data-i18n-send-failed="{% translate 'Не удалось отправить сообщение.' %}" data-i18n-connection-failed="{% translate 'Нет соединения. Сообщение не отправлено.' %}" class="flex h-[calc(100dvh-9.25rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm md:h-[650px] md:max-h-[calc(100dvh-10rem)]">
         <header class="flex shrink-0 items-center gap-3 border-b border-gray-200 px-3 py-3 sm:px-4">
             <a href="{% url 'messages' %}" aria-label="{% translate 'Назад к диалогам' %}" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-700 transition hover:bg-gray-100">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>

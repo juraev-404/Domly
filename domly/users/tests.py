@@ -883,6 +883,42 @@ class LocalizationTests(TestCase):
         self.assertIn('darkIcon.toggleAttribute("hidden", isDark)', theme_script)
         self.assertIn('lightIcon.toggleAttribute("hidden", !isDark)', theme_script)
 
+    def test_login_form_labels_and_invalid_credentials_follow_active_language(self):
+        cases = {
+            "en": {
+                "heading": "Sign in",
+                "identifier": "Username or email",
+                "password": "Password",
+                "remember": "Remember me",
+                "error": "The sign-in details are incorrect.",
+            },
+            "tg": {
+                "heading": "Воридшавӣ",
+                "identifier": "Номи корбарӣ ё почтаи электронӣ",
+                "password": "Рамз",
+                "remember": "Маро дар хотир нигоҳ дор",
+                "error": "Маълумоти воридшавӣ нодуруст аст.",
+            },
+        }
+
+        for language, expected in cases.items():
+            with self.subTest(language=language):
+                cache.clear()
+                self.client.cookies.clear()
+                with translation.override(language):
+                    login_url = reverse("login")
+                response = self.client.post(
+                    login_url,
+                    {"identifier": "missing-user", "password": "wrong-password"},
+                )
+
+                self.assertEqual(response.status_code, 200)
+                for text in expected.values():
+                    self.assertContains(response, text)
+                self.assertNotContains(response, "Неверные данные для входа.")
+                self.assertNotContains(response, "Ник или email")
+                self.assertNotContains(response, "Запомнить меня")
+
     def test_file_pickers_are_translated_in_profile_and_listing_form(self):
         self.client.force_login(self.user)
         with translation.override("en"):

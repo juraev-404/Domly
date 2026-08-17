@@ -12,6 +12,14 @@
     const errorNode = form.querySelector("[data-chat-error]");
     const statusNode = form.querySelector("[data-chat-status]");
     const eventsUrl = root.dataset.eventsUrl;
+    const text = {
+        openPhoto: root.dataset.i18nOpenPhoto,
+        connectionRetry: root.dataset.i18nConnectionRetry,
+        messageRequired: root.dataset.i18nMessageRequired,
+        sending: root.dataset.i18nSending,
+        sendFailed: root.dataset.i18nSendFailed,
+        connectionFailed: root.dataset.i18nConnectionFailed,
+    };
     const lightbox = document.querySelector("[data-chat-lightbox]");
     const lightboxImage = lightbox.querySelector("[data-chat-lightbox-image]");
     const lightboxCounter = lightbox.querySelector("[data-chat-lightbox-counter]");
@@ -95,7 +103,9 @@
                 imageButton.dataset.alt = attachment.name;
                 imageButton.setAttribute(
                     "aria-label",
-                    `Открыть фотографию ${index + 1} из ${message.attachments.length}`
+                    text.openPhoto
+                        .replace("{current}", String(index + 1))
+                        .replace("{total}", String(message.attachments.length))
                 );
                 imageButton.className = "block w-full overflow-hidden rounded-lg bg-gray-200 text-left";
                 const image = document.createElement("img");
@@ -164,7 +174,7 @@
             if (nearBottom && data.messages.length) scrollToBottom();
             statusNode.textContent = "";
         } catch (_) {
-            statusNode.textContent = "Нет соединения. Повторяем попытку…";
+            statusNode.textContent = text.connectionRetry;
         } finally {
             polling = false;
         }
@@ -174,12 +184,12 @@
         event.preventDefault();
         showError("");
         if (!textarea.value.trim() && !imageInput.files.length) {
-            showError("Введите сообщение или прикрепите фотографию.");
+            showError(text.messageRequired);
             return;
         }
 
         submitButton.disabled = true;
-        statusNode.textContent = "Отправка…";
+        statusNode.textContent = text.sending;
         if (globalThis.crypto?.randomUUID) clientIdInput.value = crypto.randomUUID();
 
         try {
@@ -195,7 +205,7 @@
             const data = await response.json();
             if (!response.ok) {
                 const firstError = data.errors?.body?.[0]?.message;
-                showError(firstError || "Не удалось отправить сообщение.");
+                showError(firstError || text.sendFailed);
                 return;
             }
             appendMessage(data.message);
@@ -205,7 +215,7 @@
             clientIdInput.value = "";
             scrollToBottom();
         } catch (_) {
-            showError("Нет соединения. Сообщение не отправлено.");
+            showError(text.connectionFailed);
         } finally {
             submitButton.disabled = false;
             statusNode.textContent = "";

@@ -3,6 +3,7 @@ from pathlib import Path
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from listings.models import Listing
 
@@ -16,9 +17,9 @@ def conversation_key_for(listing, buyer):
 @transaction.atomic
 def get_or_create_listing_conversation(*, listing, buyer):
     if listing.status != Listing.Status.PUBLISHED:
-        raise ValidationError("Начать чат можно только по опубликованному объявлению.")
+        raise ValidationError(_("Начать чат можно только по опубликованному объявлению."))
     if listing.owner_id == buyer.pk:
-        raise ValidationError("Нельзя начать чат с самим собой.")
+        raise ValidationError(_("Нельзя начать чат с самим собой."))
 
     key = conversation_key_for(listing, buyer)
     conversation, created = Conversation.objects.get_or_create(
@@ -41,7 +42,7 @@ def get_or_create_listing_conversation(*, listing, buyer):
 
 def ensure_participant(*, conversation, user):
     if not user.is_authenticated or not conversation.participants.filter(pk=user.pk).exists():
-        raise PermissionDenied("У вас нет доступа к этому диалогу.")
+        raise PermissionDenied(_("У вас нет доступа к этому диалогу."))
 
 
 def visible_messages_for_user(*, conversation, user):
@@ -83,9 +84,9 @@ def send_message(*, conversation, sender, body, client_id=None, images=()):
     body = (body or "").strip()
     images = list(images or ())
     if not body and not images:
-        raise ValidationError("Введите сообщение или прикрепите фотографию.")
+        raise ValidationError(_("Введите сообщение или прикрепите фотографию."))
     if len(body) > 4000:
-        raise ValidationError("Сообщение не должно превышать 4000 символов.")
+        raise ValidationError(_("Сообщение не должно превышать 4000 символов."))
 
     if client_id:
         message, created = Message.objects.get_or_create(
@@ -94,7 +95,7 @@ def send_message(*, conversation, sender, body, client_id=None, images=()):
             defaults={"sender": sender, "body": body},
         )
         if not created and (message.sender_id != sender.pk or message.body != body):
-            raise ValidationError("Идентификатор уже использован другим сообщением.")
+            raise ValidationError(_("Идентификатор уже использован другим сообщением."))
     else:
         message = Message.objects.create(
             conversation=conversation,

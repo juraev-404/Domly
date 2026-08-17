@@ -16,7 +16,7 @@ def normalize_phone(value):
     digits = re.sub(r"\D", "", value)
     if not value.startswith("+") or not 8 <= len(digits) <= 15:
         raise ValidationError(
-            "Введите номер в международном формате, например +992900001122."
+            _("Введите номер в международном формате, например +992900001122.")
         )
     return "+" + digits
 
@@ -29,7 +29,7 @@ INPUT_CLASS = (
 
 class RegistrationForm(forms.Form):
     username = forms.CharField(
-        label="Ник",
+        label=_("Ник"),
         max_length=150,
         widget=forms.TextInput(attrs={"class": INPUT_CLASS, "autocomplete": "username"}),
     )
@@ -38,14 +38,14 @@ class RegistrationForm(forms.Form):
         widget=forms.EmailInput(attrs={"class": INPUT_CLASS, "autocomplete": "email"}),
     )
     password1 = forms.CharField(
-        label="Пароль",
+        label=_("Пароль"),
         strip=False,
         widget=forms.PasswordInput(
             attrs={"class": INPUT_CLASS, "autocomplete": "new-password"}
         ),
     )
     password2 = forms.CharField(
-        label="Повторите пароль",
+        label=_("Повторите пароль"),
         strip=False,
         widget=forms.PasswordInput(
             attrs={"class": INPUT_CLASS, "autocomplete": "new-password"}
@@ -65,19 +65,19 @@ class RegistrationForm(forms.Form):
     def clean_username(self):
         username = self.cleaned_data["username"].strip()
         if "@" in username:
-            raise ValidationError("Ник не должен содержать символ @.")
+            raise ValidationError(_("Ник не должен содержать символ @."))
         if re.fullmatch(r"\+?\d+", username):
-            raise ValidationError("Ник не должен выглядеть как номер телефона.")
+            raise ValidationError(_("Ник не должен выглядеть как номер телефона."))
         if not re.fullmatch(r"[\w.+-]+", username, flags=re.UNICODE):
-            raise ValidationError("Используйте буквы, цифры и символы . + - _.")
+            raise ValidationError(_("Используйте буквы, цифры и символы . + - _."))
         if User.objects.filter(username__iexact=username).exists():
-            raise ValidationError("Этот ник уже занят.")
+            raise ValidationError(_("Этот ник уже занят."))
         return username
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
         if User.objects.filter(email__iexact=email).exists():
-            raise ValidationError("Этот email уже используется.")
+            raise ValidationError(_("Этот email уже используется."))
         return email
 
     def clean(self):
@@ -85,7 +85,7 @@ class RegistrationForm(forms.Form):
         password1 = cleaned_data.get("password1")
         password2 = cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
-            self.add_error("password2", "Пароли не совпадают.")
+            self.add_error("password2", _("Пароли не совпадают."))
         if password1:
             candidate = User(
                 username=cleaned_data.get("username", ""),
@@ -113,9 +113,9 @@ class LegalAcceptanceForm(forms.Form):
 
 class VerificationCodeForm(forms.Form):
     code = forms.RegexField(
-        label="Код из письма",
+        label=_("Код из письма"),
         regex=r"^\d{6}$",
-        error_messages={"invalid": "Введите шестизначный код."},
+        error_messages={"invalid": _("Введите шестизначный код.")},
         widget=forms.TextInput(
             attrs={
                 "class": INPUT_CLASS,
@@ -129,20 +129,20 @@ class VerificationCodeForm(forms.Form):
 
 class LoginForm(forms.Form):
     identifier = forms.CharField(
-        label="Ник или email",
+        label=_("Ник или email"),
         max_length=254,
         widget=forms.TextInput(
             attrs={"class": INPUT_CLASS, "autocomplete": "username"}
         ),
     )
     password = forms.CharField(
-        label="Пароль",
+        label=_("Пароль"),
         strip=False,
         widget=forms.PasswordInput(
             attrs={"class": INPUT_CLASS, "autocomplete": "current-password"}
         ),
     )
-    remember_me = forms.BooleanField(label="Запомнить меня", required=False)
+    remember_me = forms.BooleanField(label=_("Запомнить меня"), required=False)
 
 
 class ProfileForm(forms.ModelForm):
@@ -150,10 +150,10 @@ class ProfileForm(forms.ModelForm):
         model = User
         fields = ("avatar", "username", "first_name", "last_name")
         labels = {
-            "avatar": "Фото профиля",
-            "username": "Ник",
-            "first_name": "Имя",
-            "last_name": "Фамилия",
+            "avatar": _("Фото профиля"),
+            "username": _("Ник"),
+            "first_name": _("Имя"),
+            "last_name": _("Фамилия"),
         }
         widgets = {
             "avatar": forms.ClearableFileInput(
@@ -180,23 +180,23 @@ class ProfileForm(forms.ModelForm):
     def clean_username(self):
         username = self.cleaned_data["username"].strip()
         if "@" in username:
-            raise ValidationError("Ник не должен содержать символ @.")
+            raise ValidationError(_("Ник не должен содержать символ @."))
         if re.fullmatch(r"\+?\d+", username):
-            raise ValidationError("Ник не должен выглядеть как номер телефона.")
+            raise ValidationError(_("Ник не должен выглядеть как номер телефона."))
         if not re.fullmatch(r"[\w.+-]+", username, flags=re.UNICODE):
-            raise ValidationError("Используйте буквы, цифры и символы . + - _.")
+            raise ValidationError(_("Используйте буквы, цифры и символы . + - _."))
         if User.objects.exclude(pk=self.instance.pk).filter(username__iexact=username).exists():
-            raise ValidationError("Этот ник уже занят.")
+            raise ValidationError(_("Этот ник уже занят."))
         return username
 
     def clean_avatar(self):
         avatar = self.cleaned_data.get("avatar")
         if avatar and getattr(avatar, "size", 0) > 5 * 1024 * 1024:
-            raise ValidationError("Фотография не должна превышать 5 МБ.")
+            raise ValidationError(_("Фотография не должна превышать 5 МБ."))
         if avatar and avatar.content_type not in {"image/jpeg", "image/png", "image/webp"}:
-            raise ValidationError("Поддерживаются JPEG, PNG и WebP.")
+            raise ValidationError(_("Поддерживаются JPEG, PNG и WebP."))
         if avatar and avatar.image.width * avatar.image.height > 40_000_000:
-            raise ValidationError("Разрешение фотографии слишком большое.")
+            raise ValidationError(_("Разрешение фотографии слишком большое."))
         return avatar
 
 
@@ -214,7 +214,7 @@ class EmailForm(forms.Form):
 
 class EmailChangeForm(EmailForm):
     current_password = forms.CharField(
-        label="Текущий пароль",
+        label=_("Текущий пароль"),
         strip=False,
         widget=forms.PasswordInput(
             attrs={"class": INPUT_CLASS, "autocomplete": "current-password"}
@@ -228,15 +228,15 @@ class EmailChangeForm(EmailForm):
     def clean_email(self):
         email = super().clean_email()
         if self.user.email and self.user.email.casefold() == email.casefold():
-            raise ValidationError("Это ваш текущий email.")
+            raise ValidationError(_("Это ваш текущий email."))
         if User.objects.exclude(pk=self.user.pk).filter(email__iexact=email).exists():
-            raise ValidationError("Этот email уже используется.")
+            raise ValidationError(_("Этот email уже используется."))
         return email
 
     def clean_current_password(self):
         password = self.cleaned_data["current_password"]
         if not self.user.check_password(password):
-            raise ValidationError("Неверный текущий пароль.")
+            raise ValidationError(_("Неверный текущий пароль."))
         return password
 
 
@@ -275,14 +275,14 @@ class DeleteAccountForm(forms.Form):
 
 class NewPasswordForm(forms.Form):
     password1 = forms.CharField(
-        label="Новый пароль",
+        label=_("Новый пароль"),
         strip=False,
         widget=forms.PasswordInput(
             attrs={"class": INPUT_CLASS, "autocomplete": "new-password"}
         ),
     )
     password2 = forms.CharField(
-        label="Повторите новый пароль",
+        label=_("Повторите новый пароль"),
         strip=False,
         widget=forms.PasswordInput(
             attrs={"class": INPUT_CLASS, "autocomplete": "new-password"}
@@ -298,7 +298,7 @@ class NewPasswordForm(forms.Form):
         password1 = cleaned_data.get("password1")
         password2 = cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
-            self.add_error("password2", "Пароли не совпадают.")
+            self.add_error("password2", _("Пароли не совпадают."))
         if password1:
             try:
                 password_validation.validate_password(password1, self.user)

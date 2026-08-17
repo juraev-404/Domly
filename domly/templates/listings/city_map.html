@@ -43,11 +43,11 @@
 <section class="min-w-0 py-5 md:py-8">
     <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-            <p class="text-sm text-gray-500">Объявления на карте</p>
+            <p class="text-sm text-gray-500">{% translate "Объявления на карте" %}</p>
             <h1 class="text-2xl font-semibold tracking-tight text-gray-950 md:text-3xl">{{ map_city_name|city_label }}</h1>
         </div>
         <form method="get" class="flex items-center gap-2">
-            <label for="map-city" class="text-sm text-gray-500">Город</label>
+            <label for="map-city" class="text-sm text-gray-500">{% translate "Город" %}</label>
             <select id="map-city" name="city" onchange="this.form.submit()" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-medium outline-none focus:border-gray-600">
                 {% for city_name in available_cities %}
                     <option value="{{ city_name }}" {% if city_name == map_city_name %}selected{% endif %}>{{ city_name|city_label }}</option>
@@ -58,16 +58,16 @@
 
     {% if unmapped_count %}
         <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Объявлений без точного места на карте: {{ unmapped_count }}. Они не показаны, пока автор не укажет координаты объекта.
+            {% blocktranslate with count=unmapped_count %}Без точного места на карте: {{ count }}. Эти объявления не показаны, пока автор не укажет координаты объекта.{% endblocktranslate %}
         </div>
     {% endif %}
 
     <div class="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div id="city-map" class="relative z-0 h-[56vh] min-h-[400px] w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 shadow-sm md:h-[64vh] md:min-h-[520px]" aria-label="Карта объявлений города {{ map_city_name }}"></div>
+        <div id="city-map" data-negotiable-label="{% translate 'торг' %}" class="relative z-0 h-[56vh] min-h-[400px] w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 shadow-sm md:h-[64vh] md:min-h-[520px]" aria-label="{% blocktranslate with city=map_city_name|city_label %}Карта объявлений города {{ city }}{% endblocktranslate %}"></div>
 
         <aside class="rounded-2xl bg-white p-4 shadow-sm lg:max-h-[64vh] lg:min-h-[520px] lg:overflow-y-auto">
             <div class="mb-4 flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold">Объявления</h2>
+                <h2 class="text-lg font-semibold">{% translate "Объявления" %}</h2>
                 <span class="text-sm text-gray-500">{{ city_listings|length }}</span>
             </div>
 
@@ -76,7 +76,7 @@
                     {% for listing in city_listings %}
                         <article data-map-listing-card data-listing-id="{{ listing.public_id }}" class="map-listing-card overflow-hidden rounded-2xl bg-black text-white transition">
                             <div class="flex min-w-0">
-                                <a href="{{ listing.get_absolute_url }}" class="h-28 w-28 shrink-0 bg-gray-800" aria-label="Открыть объявление {{ listing.title }}">
+                                <a href="{{ listing.get_absolute_url }}" class="h-28 w-28 shrink-0 bg-gray-800" aria-label="{% blocktranslate with title=listing.title %}Открыть объявление {{ title }}{% endblocktranslate %}">
                                     {% with cover=listing.images.all|first %}
                                         {% if cover %}
                                             <img src="{% if cover.thumbnail %}{{ cover.thumbnail.url }}{% else %}{{ cover.image.url }}{% endif %}" alt="{{ cover.alt_text|default:listing.title }}" class="h-full w-full object-cover">
@@ -91,7 +91,7 @@
                                     <p class="font-semibold">{{ listing.price|floatformat:"-2" }} {{ listing.currency }}</p>
                                     <a href="{{ listing.get_absolute_url }}" class="mt-1 block truncate text-sm font-medium hover:underline">{{ listing.title }}</a>
                                     <p class="mt-1 truncate text-xs text-gray-400">{{ listing.address }}</p>
-                                    <button type="button" data-map-focus="{{ listing.public_id }}" class="mt-2 text-xs font-medium text-green-400 transition hover:text-green-300">Показать на карте</button>
+                                    <button type="button" data-map-focus="{{ listing.public_id }}" class="mt-2 text-xs font-medium text-green-400 transition hover:text-green-300">{% translate "Показать на карте" %}</button>
                                 </div>
                             </div>
                         </article>
@@ -103,7 +103,7 @@
                 </div>
             {% endif %}
 
-            <a href="{% url 'listing_list' %}?city={{ map_city_name|urlencode }}" class="mt-4 inline-flex text-sm font-medium text-gray-600 transition hover:text-black">Смотреть все объявления города</a>
+            <a href="{% url 'listing_list' %}?city={{ map_city_name|urlencode }}" class="mt-4 inline-flex text-sm font-medium text-gray-600 transition hover:text-black">{% translate "Смотреть все объявления города" %}</a>
         </aside>
     </div>
 </section>
@@ -159,7 +159,7 @@
         }
         const price = document.createElement("p");
         price.className = "font-semibold text-gray-950";
-        price.textContent = `${listing.price} ${listing.currency}${listing.is_negotiable ? " · торг" : ""}`;
+        price.textContent = `${listing.price} ${listing.currency}${listing.is_negotiable ? ` · ${mapElement.dataset.negotiableLabel}` : ""}`;
         const title = document.createElement("a");
         title.href = listing.url;
         title.className = "mt-1 block font-medium text-gray-900 hover:underline";

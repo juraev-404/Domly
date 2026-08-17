@@ -865,9 +865,6 @@ msgstr "Your profile and related data will be deleted and cannot be restored."
 msgid "Удалить аккаунт"
 msgstr "Delete account"
 
-msgid "Текущий пароль"
-msgstr "Current password"
-
 msgid "Введите ваш ник для подтверждения"
 msgstr "Enter your username to confirm"
 
@@ -906,3 +903,972 @@ msgstr "Delete permanently"
 
 msgid "В профиле откройте раздел удаления аккаунта. Подтвердите действие текущим паролем и точным ником; восстановить удалённые данные нельзя."
 msgstr "Open the account deletion section in your profile. Confirm the action with your current password and exact username; deleted data cannot be restored."
+
+msgid "Пароль"
+msgstr "Password"
+
+msgid "Повторите пароль"
+msgstr "Repeat password"
+
+msgid "Ник не должен содержать символ @."
+msgstr "The username must not contain the @ symbol."
+
+msgid "Ник не должен выглядеть как номер телефона."
+msgstr "The username must not look like a phone number."
+
+msgid "Используйте буквы, цифры и символы . + - _."
+msgstr "Use letters, numbers, and the symbols . + - _."
+
+msgid "Этот ник уже занят."
+msgstr "This username is already taken."
+
+msgid "Этот email уже используется."
+msgstr "This email is already in use."
+
+msgid "Пароли не совпадают."
+msgstr "The passwords do not match."
+
+msgid "Код из письма"
+msgstr "Code from the email"
+
+msgid "Введите шестизначный код."
+msgstr "Enter the six-digit code."
+
+msgid "Ник или email"
+msgstr "Username or email"
+
+msgid "Запомнить меня"
+msgstr "Remember me"
+
+msgid "Фотография не должна превышать 5 МБ."
+msgstr "The photo must not exceed 5 MB."
+
+msgid "Это ваш текущий email."
+msgstr "This is your current email."
+
+msgid "Повторите новый пароль"
+msgstr "Repeat the new password"
+
+msgid "Достигнут лимит отправок. Начните процесс заново позже."
+msgstr "The sending limit has been reached. Start the process again later."
+
+msgid "Новый код можно запросить через минуту."
+msgstr "You can request a new code in one minute."
+
+msgid "Не удалось отправить письмо. Попробуйте позже."
+msgstr "The email could not be sent. Try again later."
+
+msgid "Новый код отправлен на email."
+msgstr "A new code has been sent by email."
+
+msgid "Неверные данные для входа."
+msgstr "The sign-in details are incorrect."
+
+msgid "Слишком много запросов. Попробуйте позже."
+msgstr "Too many requests. Try again later."
+
+msgid "Не удалось отправить код. Попробуйте позже."
+msgstr "The code could not be sent. Try again later."
+
+msgid "Срок действия кода истёк. Зарегистрируйтесь снова."
+msgstr "The code has expired. Register again."
+
+msgid "Превышено число попыток. Зарегистрируйтесь снова."
+msgstr "Too many attempts. Register again."
+
+msgid "Неверный код."
+msgstr "The code is incorrect."
+
+msgid "Ник или email уже зарегистрирован."
+msgstr "The username or email is already registered."
+
+msgid "Срок действия кода истёк. Запросите новый код."
+msgstr "The code has expired. Request a new code."
+
+msgid "Превышено число попыток. Начните восстановление заново."
+msgstr "Too many attempts. Start password recovery again."
+
+msgid "Пароль изменён. Теперь можно войти."
+msgstr "The password has been changed. You can now sign in."
+
+msgid "Данные профиля обновлены."
+msgstr "The profile has been updated."
+
+msgid "Превышено число попыток. Начните смену email заново."
+msgstr "Too many attempts. Start the email change again."
+
+msgid "Новый email подтверждён."
+msgstr "The new email has been verified."
+
+msgid "Код регистрации в Domly"
+msgstr "Domly registration code"
+
+msgid "Код восстановления пароля Domly"
+msgstr "Domly password recovery code"
+
+msgid "Код подтверждения нового email в Domly"
+msgstr "Domly new email verification code"
+
+msgid "Для завершения регистрации в Domly введите код:"
+msgstr "Enter this code to complete your Domly registration:"
+
+msgid "Для восстановления пароля Domly введите код:"
+msgstr "Enter this code to recover your Domly password:"
+
+msgid "Для подтверждения нового адреса email введите код:"
+msgstr "Enter this code to verify your new email address:"
+
+msgid "Код действует 10 минут. Если вы не запрашивали его, просто проигнорируйте это письмо."
+msgstr "The code is valid for 10 minutes. If you did not request it, simply ignore this email."
+
+msgid "Черновик объявления сохранён."
+msgstr "The listing draft has been saved."
+
+msgid "Изменения сохранены, объявление отправлено на модерацию."
+msgstr "The changes have been saved and the listing has been sent for moderation."
+
+msgid "Изменения сохранены в черновике."
+msgstr "The changes have been saved in the draft."
+
+msgid "Объявление добавлено в избранное."
+msgstr "The listing has been added to favorites."
+
+msgid "Объявление удалено из избранного."
+msgstr "The listing has been removed from favorites."
+
+msgid "Можно прикрепить не более 5 фотографий."
+msgstr "You can attach no more than 5 photos."
+
+msgid "Каждая фотография должна быть не больше 10 МБ."
+msgstr "Each photo must not exceed 10 MB."
+
+msgid "Напишите сообщение…"
+msgstr "Write a message…"
+
+msgid "Введите сообщение или прикрепите фотографию."
+msgstr "Enter a message or attach a photo."
+
+msgid "Начать чат можно только по опубликованному объявлению."
+msgstr "A chat can only be started from a published listing."
+
+msgid "Нельзя начать чат с самим собой."
+msgstr "You cannot start a chat with yourself."
+
+msgid "У вас нет доступа к этому диалогу."
+msgstr "You do not have access to this conversation."
+
+msgid "Сообщение не должно превышать 4000 символов."
+msgstr "The message must not exceed 4,000 characters."
+
+msgid "Идентификатор уже использован другим сообщением."
+msgstr "The identifier has already been used by another message."
+
+msgid "Некорректный курсор."
+msgstr "Invalid cursor."
+
+msgid "Чат удалён у вас."
+msgstr "The chat has been removed from your account."
+
+msgid "Открыть фотографию {current} из {total}"
+msgstr "Open photo {current} of {total}"
+
+msgid "Нет соединения. Повторяем попытку…"
+msgstr "No connection. Retrying…"
+
+msgid "Отправка…"
+msgstr "Sending…"
+
+msgid "Не удалось отправить сообщение."
+msgstr "The message could not be sent."
+
+msgid "Нет соединения. Сообщение не отправлено."
+msgstr "No connection. The message was not sent."
+
+msgid "Навигация"
+msgstr "Navigation"
+
+msgid "Режим предпросмотра"
+msgstr "Preview mode"
+
+msgid "Это объявление пока не видно другим пользователям."
+msgstr "This listing is not visible to other users yet."
+
+msgid "Объявления на карте"
+msgstr "Listings on the map"
+
+msgid "Без точного места на карте: %(count)s. Эти объявления не показаны, пока автор не укажет координаты объекта."
+msgstr "Without an exact map location: %(count)s. These listings are hidden until the author adds the property coordinates."
+
+msgid "Карта объявлений города %(city)s"
+msgstr "Map of listings in %(city)s"
+
+msgid "Показать на карте"
+msgstr "Show on map"
+
+msgid "Смотреть все объявления города"
+msgstr "View all city listings"
+
+msgid "%(username)s — автор на Domly"
+msgstr "%(username)s — author on Domly"
+
+msgid "Опубликовано объявлений: %(count)s"
+msgstr "Published listings: %(count)s"
+
+msgid "Редактировать профиль"
+msgstr "Edit profile"
+
+msgid "Объявления автора"
+msgstr "Author's listings"
+
+msgid "Только опубликованные объявления, доступные другим пользователям."
+msgstr "Only published listings available to other users."
+
+msgid "Страницы объявлений автора"
+msgstr "Author listing pages"
+
+msgid "Назад"
+msgstr "Back"
+
+msgid "%(current)s из %(total)s"
+msgstr "%(current)s of %(total)s"
+
+msgid "Дальше"
+msgstr "Next"
+
+msgid "У автора пока нет опубликованных объявлений"
+msgstr "The author has no published listings yet"
+
+# Interactive forms, listing lifecycle, reports, and moderation
+msgid "1 день"
+msgstr "1 day"
+
+msgid "7 дней"
+msgstr "7 days"
+
+msgid "30 дней"
+msgstr "30 days"
+
+msgid "Аккаунт заблокирован."
+msgstr "The account has been blocked."
+
+msgid "Аккаунт разблокирован."
+msgstr "The account has been unblocked."
+
+msgid "Аккаунт уже заблокирован или отключён."
+msgstr "The account is already blocked or disabled."
+
+msgid "Без ограничения срока"
+msgstr "No time limit"
+
+msgid "Без срока"
+msgstr "Indefinitely"
+
+msgid "Блокировка"
+msgstr "Block"
+
+msgid "Блокировка уже завершена."
+msgstr "This block has already ended."
+
+msgid "В городе %(city)s пока нет опубликованных объявлений с точным местом на карте."
+msgstr "There are no published listings with an exact map location in %(city)s yet."
+
+msgid "В объявлении может быть не более 10 фотографий."
+msgstr "A listing can have no more than 10 photos."
+
+msgid "Ваша жалоба на это объявление уже рассматривается."
+msgstr "Your report about this listing is already under review."
+
+msgid "Ваша жалоба уже рассматривается"
+msgstr "Your report is already under review"
+
+msgid "Введите корректный номер, например +992900001122."
+msgstr "Enter a valid number, for example +992900001122."
+
+msgid "Введите номер в международном формате, например +992900001122."
+msgstr "Enter the number in international format, for example +992900001122."
+
+msgid "Восстановить публикацию"
+msgstr "Restore listing"
+
+msgid "Для отправки на модерацию добавьте хотя бы одну фотографию."
+msgstr "Add at least one photo before submitting the listing for review."
+
+msgid "Для отправки на модерацию укажите точное место объекта на карте."
+msgstr "Mark the property's exact location on the map before submitting it for review."
+
+msgid "Для причины «Другое» добавьте подробности."
+msgstr "Add details when selecting “Other” as the reason."
+
+msgid "До"
+msgstr "Until"
+
+msgid "Добавьте комментарий к решению."
+msgstr "Add a comment about the decision."
+
+msgid "Добавьте короткий комментарий к решению."
+msgstr "Add a brief comment about the decision."
+
+msgid "Если email связан с подтверждённым аккаунтом, письмо уже отправлено. Код действует 10 минут."
+msgstr "If the email is linked to a verified account, the message has been sent. The code is valid for 10 minutes."
+
+msgid "Жалоба на объявление"
+msgstr "Report listing"
+
+msgid "Жалоба отправлена модераторам."
+msgstr "The report has been sent to the moderators."
+
+msgid "Жалобу увидят только администраторы и модераторы."
+msgstr "Only administrators and moderators will see this report."
+
+msgid "Заблокировать @%(username)s"
+msgstr "Block @%(username)s"
+
+msgid "Заблокировать аккаунт"
+msgstr "Block account"
+
+msgid "Заблокировать объявление"
+msgstr "Block listing"
+
+msgid "Защита площадки"
+msgstr "Platform safety"
+
+msgid "История блокировок"
+msgstr "Block history"
+
+msgid "Комментарий модератора"
+msgstr "Moderator comment"
+
+msgid "Коротко опишите, что не так с объявлением"
+msgstr "Briefly describe what is wrong with the listing"
+
+msgid "Кратко объясните принятое решение"
+msgstr "Briefly explain the decision"
+
+msgid "Мы отправили шестизначный код на %(email)s. Код действует 10 минут."
+msgstr "We sent a six-digit code to %(email)s. The code is valid for 10 minutes."
+
+msgid "Неизвестное назначение кода."
+msgstr "Unknown verification-code purpose."
+
+msgid "Неизвестное решение."
+msgstr "Unknown decision."
+
+msgid "Обновлено"
+msgstr "Updated"
+
+msgid "Объявление заблокировано модератором"
+msgstr "Listing blocked by a moderator"
+
+msgid "Объявление заблокировано."
+msgstr "The listing has been blocked."
+
+msgid "Объявление исчезнет из личного кабинета и поиска. Это действие нельзя отменить самостоятельно."
+msgstr "The listing will disappear from your account and search. You cannot undo this action yourself."
+
+msgid "Объявление исчезнет из поиска. Его можно будет снова опубликовать из личного кабинета."
+msgstr "The listing will disappear from search. You can publish it again from your account."
+
+msgid "Объявление опубликовано."
+msgstr "The listing has been published."
+
+msgid "Объявление отклонено, причина сохранена."
+msgstr "The listing has been rejected and the reason has been saved."
+
+msgid "Объявление отмечено как проданное."
+msgstr "The listing has been marked as sold."
+
+msgid "Объявление отмечено как сданное."
+msgstr "The listing has been marked as rented."
+
+msgid "Объявление разблокировано."
+msgstr "The listing has been unblocked."
+
+msgid "Объявление снова опубликовано."
+msgstr "The listing has been published again."
+
+msgid "Объявление снято с публикации."
+msgstr "The listing has been unpublished."
+
+msgid "Объявление удалено."
+msgstr "The listing has been deleted."
+
+msgid "Объявление уже заблокировано."
+msgstr "The listing is already blocked."
+
+msgid "Объясните автору, что нужно исправить перед повторной отправкой"
+msgstr "Tell the author what needs to be fixed before resubmission"
+
+msgid "Одобрить и опубликовать"
+msgstr "Approve and publish"
+
+msgid "Опубликовано"
+msgstr "Published"
+
+msgid "Отклонить"
+msgstr "Reject"
+
+msgid "Отметить проданным"
+msgstr "Mark as sold"
+
+msgid "Отметить сданным"
+msgstr "Mark as rented"
+
+msgid "Отправить жалобу"
+msgstr "Submit report"
+
+msgid "Отправлено на модерацию"
+msgstr "Submitted for review"
+
+msgid "Подробности"
+msgstr "Details"
+
+msgid "Пожаловаться на объявление"
+msgstr "Report listing"
+
+msgid "Причина"
+msgstr "Reason"
+
+msgid "Причина блокировки"
+msgstr "Block reason"
+
+msgid "Причина блокировки аккаунта"
+msgstr "Account block reason"
+
+msgid "Причина отклонения"
+msgstr "Rejection reason"
+
+msgid "Причина разблокировки"
+msgstr "Unblock reason"
+
+msgid "Причина, которую увидит автор"
+msgstr "Reason shown to the author"
+
+msgid "Причину увидит автор объявления."
+msgstr "The listing author will see the reason."
+
+msgid "Проверка объявления"
+msgstr "Listing review"
+
+msgid "Проверьте причину и описание жалобы."
+msgstr "Review the report reason and description."
+
+msgid "Проверьте причину и срок блокировки."
+msgstr "Review the block reason and duration."
+
+msgid "Решение модератора"
+msgstr "Moderator decision"
+
+msgid "Решение по жалобе сохранено."
+msgstr "The decision on the report has been saved."
+
+msgid "Решение принято %(date)s. Исправьте объявление и отправьте его повторно."
+msgstr "Decision made on %(date)s. Fix the listing and submit it again."
+
+msgid "Скажите, что нашли объявление на Domly"
+msgstr "Mention that you found the listing on Domly"
+
+msgid "Снять с публикации"
+msgstr "Unpublish"
+
+msgid "Срок"
+msgstr "Duration"
+
+msgid "Текущий статус:"
+msgstr "Current status:"
+
+msgid "Точка на карте должна содержать широту и долготу."
+msgstr "The map point must contain latitude and longitude."
+
+msgid "Удалить объявление?"
+msgstr "Delete listing?"
+
+msgid "Укажите понятную причину блокировки."
+msgstr "Provide a clear reason for the block."
+
+msgid "Укажите причину отклонения."
+msgstr "Provide a reason for rejection."
+
+msgid "Укажите причину разблокировки."
+msgstr "Provide a reason for unblocking."
+
+msgid "Управление объявлением"
+msgstr "Manage listing"
+
+msgid "Эта блокировка уже активна. Разблокировать объявление можно на странице истории."
+msgstr "This block is already active. You can unblock the listing from the history page."
+
+msgid "Эта жалоба уже обработана."
+msgstr "This report has already been processed."
+
+msgid "Этаж не может быть выше общего числа этажей."
+msgstr "The floor cannot be higher than the total number of floors."
+
+msgid "Это действие недоступно для текущего статуса объявления."
+msgstr "This action is unavailable for the listing's current status."
+
+msgid "Это объявление уже обработано."
+msgstr "This listing has already been reviewed."
+
+msgid "Я даю согласие на сбор и обработку персональных данных, на условиях"
+msgstr "I consent to the collection and processing of personal data under the"
+
+msgid "Адрес не найден. Уточните его или поставьте точку вручную."
+msgstr "Address not found. Make it more specific or place the point manually."
+
+msgid "Введите более точный адрес."
+msgstr "Enter a more specific address."
+
+msgid "Выберите город из списка."
+msgstr "Select a city from the list."
+
+msgid "Неизвестный город"
+msgstr "Unknown city"
+
+msgid "Объявление отправлено на модерацию."
+msgstr "The listing has been submitted for review."
+
+msgid "Повторите поиск адреса через секунду."
+msgstr "Try searching for the address again in a moment."
+
+msgid "Сервис поиска адресов временно недоступен."
+msgstr "The address search service is temporarily unavailable."
+
+# Remaining application UI
+msgid "5 и больше"
+msgstr "5 or more"
+
+msgid "Автор"
+msgstr "Author"
+
+msgid "Аккаунт"
+msgstr "Account"
+
+msgid "Активные ограничения и история принятых решений."
+msgstr "Active restrictions and decision history."
+
+msgid "Активных блокировок аккаунтов нет."
+msgstr "There are no active account blocks."
+
+msgid "Активных блокировок объявлений нет."
+msgstr "There are no active listing blocks."
+
+msgid "Анимированные изображения не поддерживаются."
+msgstr "Animated images are not supported."
+
+msgid "Доллар США"
+msgstr "US dollar"
+
+msgid "Доступ модератора"
+msgstr "Moderator access"
+
+msgid "Другое"
+msgstr "Other"
+
+msgid "Дубликат"
+msgstr "Duplicate"
+
+msgid "Жалоб с выбранным статусом нет."
+msgstr "There are no reports with the selected status."
+
+msgid "Жалоба от"
+msgstr "Report from"
+
+msgid "Заблокированные аккаунты"
+msgstr "Blocked accounts"
+
+msgid "Заблокированные объявления"
+msgstr "Blocked listings"
+
+msgid "Заблокировано модератором"
+msgstr "Blocked by a moderator"
+
+msgid "Здесь появляются решения по вашим объявлениям."
+msgstr "Decisions about your listings will appear here."
+
+msgid "История пока пуста."
+msgstr "The history is empty."
+
+msgid "Код отправлен на %(email)s и действует 10 минут."
+msgstr "The code was sent to %(email)s and is valid for 10 minutes."
+
+msgid "Комментарий к решению"
+msgstr "Decision comment"
+
+msgid "Модерация объявлений"
+msgstr "Listing moderation"
+
+msgid "Мошенничество"
+msgstr "Fraud"
+
+msgid "Мы сообщим здесь о результате модерации объявления."
+msgstr "We will show the listing review result here."
+
+msgid "На модерации"
+msgstr "Under review"
+
+msgid "На рассмотрении"
+msgstr "Pending review"
+
+msgid "Не удалось обработать изображение."
+msgstr "The image could not be processed."
+
+msgid "Неверная информация"
+msgstr "Incorrect information"
+
+msgid "Недопустимое содержание"
+msgstr "Prohibited content"
+
+msgid "Объект уже недоступен"
+msgstr "Property is no longer available"
+
+msgid "Объявление"
+msgstr "Listing"
+
+msgid "Одобрено"
+msgstr "Approved"
+
+msgid "Отклонена"
+msgstr "Rejected"
+
+msgid "Отклонено"
+msgstr "Rejected"
+
+msgid "Отклонённые"
+msgstr "Rejected"
+
+msgid "Открыть объявление"
+msgstr "Open listing"
+
+msgid "Отметить прочитанным"
+msgstr "Mark as read"
+
+msgid "Отправлено"
+msgstr "Sent"
+
+msgid "Очередь модерации"
+msgstr "Moderation queue"
+
+msgid "Очередь пуста"
+msgstr "The queue is empty"
+
+msgid "Площадь до"
+msgstr "Area up to"
+
+msgid "Площадь от"
+msgstr "Area from"
+
+msgid "Подтвердить"
+msgstr "Confirm"
+
+msgid "Подтверждена"
+msgstr "Confirmed"
+
+msgid "Подтверждённые"
+msgstr "Confirmed"
+
+msgid "Последние завершённые блокировки"
+msgstr "Recent ended blocks"
+
+msgid "Почему жалоба подтверждена или отклонена"
+msgstr "Why the report was confirmed or rejected"
+
+msgid "Проверить"
+msgstr "Review"
+
+msgid "Продано"
+msgstr "Sold"
+
+msgid "Прочитать все"
+msgstr "Mark all as read"
+
+msgid "Прочитать и открыть"
+msgstr "Mark as read and open"
+
+msgid "Разблокировать"
+msgstr "Unblock"
+
+msgid "Сдано"
+msgstr "Rented"
+
+msgid "Сделка завершена"
+msgstr "Deal completed"
+
+msgid "Сейчас нет объявлений, ожидающих проверки."
+msgstr "There are no listings awaiting review."
+
+msgid "Снято с публикации"
+msgstr "Unpublished"
+
+msgid "Сомони"
+msgstr "Somoni"
+
+msgid "Статус жалоб"
+msgstr "Report status"
+
+msgid "Страница %(current)s из %(total)s"
+msgstr "Page %(current)s of %(total)s"
+
+msgid "Страницы очереди"
+msgstr "Moderation queue pages"
+
+msgid "Уведомлений пока нет"
+msgstr "No notifications yet"
+
+msgid "Удалено"
+msgstr "Deleted"
+
+msgid "Черновик"
+msgstr "Draft"
+
+msgid "Этаж до"
+msgstr "Floor up to"
+
+msgid "Этаж от"
+msgstr "Floor from"
+
+msgid "без срока"
+msgstr "indefinitely"
+
+msgid "блокировка объявления"
+msgstr "listing block"
+
+msgid "блокировки объявлений"
+msgstr "listing blocks"
+
+msgid "до"
+msgstr "until"
+
+msgid "жалоба на объявление"
+msgstr "listing report"
+
+msgid "жалобы на объявления"
+msgstr "listing reports"
+
+msgid "решение модерации"
+msgstr "moderation decision"
+
+msgid "решения модерации"
+msgstr "moderation decisions"
+
+msgid "удалённый пользователь"
+msgstr "deleted user"
+
+# Help center
+msgid "Domly помогает найти объявление и связаться с автором, но не принимает оплату за недвижимость и не гарантирует сделку."
+msgstr "Domly helps you find listings and contact their authors, but does not accept property payments or guarantee transactions."
+
+msgid "Автор может временно скрыть опубликованное объявление из каталога, а затем восстановить публикацию из личного кабинета."
+msgstr "The author can temporarily hide a published listing from the catalog and restore it later from their account."
+
+msgid "Адрес и карта"
+msgstr "Address and map"
+
+msgid "Аккаунт и вход"
+msgstr "Account and sign-in"
+
+msgid "Безопасная сделка"
+msgstr "Safe transaction"
+
+msgid "Безопасность"
+msgstr "Safety"
+
+msgid "В профиле можно изменить личные данные и email, а также открыть свои объявления, черновики, избранное и уведомления."
+msgstr "In your profile, you can edit your personal details and email and access your listings, drafts, favorites, and notifications."
+
+msgid "В строке поиска можно написать запрос обычными словами, например «двушка до 5000 в Душанбе». Domly попробует распознать город, тип, число комнат и цену."
+msgstr "You can enter a natural-language query, such as “two-room apartment under 5000 in Dushanbe.” Domly will try to recognize the city, property type, room count, and price."
+
+msgid "Важно"
+msgstr "Important"
+
+msgid "Выберите город в шапке сайта. Каталог и страница карты будут открыты для выбранного города."
+msgstr "Select a city in the site header. The catalog and map page will open for that city."
+
+msgid "Где найти сохранённый черновик?"
+msgstr "Where can I find a saved draft?"
+
+msgid "Да. Кнопка редактирования доступна только автору. После сохранения изменений объявление снова проверит модератор."
+msgstr "Yes. The edit button is available only to the author. A moderator will review the listing again after changes are saved."
+
+msgid "Для входа используйте ник или подтверждённый email вместе с паролем. Флажок «Запомнить меня» сохраняет вход после закрытия браузера."
+msgstr "Sign in with your username or verified email and password. “Remember me” keeps you signed in after closing the browser."
+
+msgid "Жалобы и блокировки"
+msgstr "Reports and blocks"
+
+msgid "Как восстановить забытый пароль?"
+msgstr "How do I reset a forgotten password?"
+
+msgid "Как избежать мошенничества"
+msgstr "How to avoid fraud"
+
+msgid "Карта"
+msgstr "Map"
+
+msgid "Короткие ответы"
+msgstr "Quick answers"
+
+msgid "Можно выбрать сделку, тип недвижимости, цену, сортировку, комнаты, площадь и этаж. На мобильном дополнительные фильтры открываются иконкой в шапке."
+msgstr "You can filter by deal, property type, price, sorting, rooms, area, and floor. On mobile, open additional filters using the header icon."
+
+msgid "Можно добавить до 10 фотографий и необязательный номер для связи. Для отправки на модерацию нужны хотя бы одна фотография и точка объекта на карте."
+msgstr "You can add up to 10 photos and an optional contact number. At least one photo and a map point are required for review."
+
+msgid "Можно ли изменить опубликованное объявление?"
+msgstr "Can I edit a published listing?"
+
+msgid "На карте показываются опубликованные объявления выбранного города. Нажмите на метку, чтобы открыть карточку, или используйте ссылку на карту со страницы объявления."
+msgstr "The map shows published listings in the selected city. Select a marker to open its card, or use the map link on the listing page."
+
+msgid "На странице входа нажмите «Забыли пароль?», получите шестизначный код на подтверждённый email и задайте новый пароль."
+msgstr "On the sign-in page, select “Forgot your password?”, receive a six-digit code at your verified email, and set a new password."
+
+msgid "На чужое опубликованное объявление можно отправить жалобу. Её рассматривают только администраторы и модераторы; при нарушении они могут заблокировать объявление или аккаунт."
+msgstr "You can report another user's published listing. Only administrators and moderators review reports; they may block a listing or account when rules are violated."
+
+msgid "Нажмите на значок закладки, чтобы сохранить объявление. Повторное нажатие удалит его из избранного."
+msgstr "Select the bookmark icon to save a listing. Select it again to remove the listing from favorites."
+
+msgid "Найдите ответ о регистрации, поиске, карте, объявлениях, модерации, общении и безопасности."
+msgstr "Find answers about registration, search, maps, listings, moderation, messaging, and safety."
+
+msgid "Например: почему объявление не опубликовано"
+msgstr "For example: why is my listing not published?"
+
+msgid "Начать разговор"
+msgstr "Start a conversation"
+
+msgid "Не отправляйте предоплату до личного осмотра объекта и проверки документов."
+msgstr "Do not send an advance payment before inspecting the property and checking the documents in person."
+
+msgid "Не переходите по подозрительным ссылкам из сообщений и не устанавливайте неизвестные приложения."
+msgstr "Do not follow suspicious links in messages or install unknown applications."
+
+msgid "Непрочитанные сообщения"
+msgstr "Unread messages"
+
+msgid "Никому не сообщайте пароль, код из письма или данные банковской карты."
+msgstr "Never share your password, email verification code, or bank-card details."
+
+msgid "Общение в чате"
+msgstr "Chat messaging"
+
+msgid "Общение с владельцем"
+msgstr "Contacting the owner"
+
+msgid "Объявления и модерация"
+msgstr "Listings and moderation"
+
+msgid "Опубликованное объявление видно в каталоге. После изменения оно снова отправляется на модерацию."
+msgstr "A published listing is visible in the catalog. Editing it submits it for review again."
+
+msgid "Ответ не найден"
+msgstr "No answer found"
+
+msgid "Откройте объявление и нажмите «Написать владельцу». Диалог будет связан с выбранным объявлением."
+msgstr "Open a listing and select “Message owner.” The conversation will be linked to that listing."
+
+msgid "Откройте профиль и перейдите к вкладке черновиков. Оттуда можно продолжить редактирование."
+msgstr "Open your profile and go to the drafts tab. You can continue editing from there."
+
+msgid "Отправленные изображения открываются поверх текущей страницы, без перехода в новое окно."
+msgstr "Sent images open over the current page without navigating to a new window."
+
+msgid "Поиск"
+msgstr "Search"
+
+msgid "Поиск недвижимости"
+msgstr "Property search"
+
+msgid "Поиск по справке"
+msgstr "Search help"
+
+msgid "Попробуйте сократить запрос или использовать другие слова."
+msgstr "Try shortening your query or using different words."
+
+msgid "После ввода города и адреса Domly попробует найти объект автоматически. Проверьте найденную точку и при необходимости передвиньте её вручную."
+msgstr "After you enter a city and address, Domly will try to locate the property automatically. Check the point and move it manually if needed."
+
+msgid "После завершения сделки объявление исчезает из поиска. Если объект снова станет доступен, публикацию можно восстановить."
+msgstr "After the deal is completed, the listing disappears from search. You can restore it if the property becomes available again."
+
+msgid "После отправки объявление проверяет модератор. До публикации оно не отображается другим пользователям."
+msgstr "A moderator reviews the listing after submission. Other users cannot see it before publication."
+
+msgid "Почему моё объявление не видно в каталоге?"
+msgstr "Why is my listing not visible in the catalog?"
+
+msgid "Причина отклонения отображается на странице объявления. Исправьте указанные замечания и отправьте объявление повторно."
+msgstr "The rejection reason appears on the listing page. Fix the noted issues and submit the listing again."
+
+msgid "Проверьте его статус в личном кабинете. Черновик, объявление на модерации, отклонённое, снятое, проданное или сданное объявление другим пользователям не показывается."
+msgstr "Check its status in your account. Draft, under-review, rejected, unpublished, sold, or rented listings are not shown to other users."
+
+msgid "Продано или сдано"
+msgstr "Sold or rented"
+
+msgid "Разделы помощи"
+msgstr "Help topics"
+
+msgid "Регистрация, вход и профиль"
+msgstr "Registration, sign-in, and profile"
+
+msgid "Русский выбран по умолчанию. Язык меняется флагами, а светлая и тёмная темы — кнопкой луны или солнца. Выбор сохраняется в браузере."
+msgstr "Russian is selected by default. Use the flags to change language and the moon or sun button to change theme. Your choice is saved in the browser."
+
+msgid "Сколько длится модерация?"
+msgstr "How long does moderation take?"
+
+msgid "Создание объявления"
+msgstr "Creating a listing"
+
+msgid "Справочный центр Domly"
+msgstr "Domly Help Center"
+
+msgid "Сравните адрес, фотографии, документы и данные владельца до подписания договора."
+msgstr "Compare the address, photos, documents, and owner details before signing an agreement."
+
+msgid "Счётчик у иконки чата показывает общее число непрочитанных сообщений."
+msgstr "The counter by the chat icon shows the total number of unread messages."
+
+msgid "Удаление"
+msgstr "Deletion"
+
+msgid "Удаление диалога"
+msgstr "Deleting a conversation"
+
+msgid "Удаление скрывает историю только в вашем аккаунте. У другого участника она сохраняется; новое сообщение снова покажет диалог."
+msgstr "Deletion hides the history only in your account. The other participant retains it, and a new message will make the conversation visible again."
+
+msgid "Удалённое объявление исчезает из каталога и личного кабинета. Самостоятельно отменить удаление нельзя."
+msgstr "A deleted listing disappears from the catalog and your account. You cannot undo deletion yourself."
+
+msgid "Укажите ник, email и пароль, затем подтвердите почту шестизначным кодом. Код действует 10 минут."
+msgstr "Enter a username, email, and password, then verify your email with a six-digit code. The code is valid for 10 minutes."
+
+msgid "Умный поиск"
+msgstr "Smart search"
+
+msgid "Фиксированного срока пока нет. Статус изменится после решения модератора, а при отклонении вы увидите причину."
+msgstr "There is no fixed review time yet. The status changes after a moderator's decision, and you will see the reason if the listing is rejected."
+
+msgid "Фильтры"
+msgstr "Filters"
+
+msgid "Фильтры и избранное"
+msgstr "Filters and favorites"
+
+msgid "Частые вопросы"
+msgstr "Frequently asked questions"
+
+msgid "Чем мы можем помочь?"
+msgstr "How can we help?"
+
+msgid "Черновик виден только автору. Его можно найти в личном кабинете, продолжить редактирование и позже отправить на проверку."
+msgstr "A draft is visible only to its author. Find it in your account, continue editing, and submit it for review later."
+
+msgid "Черновики и модерация"
+msgstr "Drafts and moderation"
+
+msgid "Язык и тема"
+msgstr "Language and theme"
