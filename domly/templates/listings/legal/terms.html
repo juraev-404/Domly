@@ -8,7 +8,7 @@
 {% block legal_content %}
 <section>
     <h2 class="text-xl font-semibold text-gray-950">{% translate "1. Стороны и принятие условий" %}</h2>
-    <p class="mt-2">{% blocktranslate with operator=legal_operator_name address=legal_operator_address %}Domly предоставляет {{ operator }}, адрес: {{ address }} (далее — «Domly»). Создавая аккаунт, пользователь заключает с Domly соглашение об использовании информационного сервиса и отдельно принимает Политику конфиденциальности и Правила публикации и модерации.{% endblocktranslate %}</p>
+    <p class="mt-2">{% blocktranslate with operator=legal_operator_name address=legal_operator_address %}Информационный сервис Domly администрирует {{ operator }}. Место осуществления деятельности: {{ address }}. Создавая аккаунт, пользователь заключает соглашение об использовании Domly и отдельно принимает Политику конфиденциальности и Правила публикации и модерации.{% endblocktranslate %}</p>
     {% if legal_operator_registration_id %}<p class="mt-2">{% blocktranslate with registration_id=legal_operator_registration_id %}Регистрационные сведения: {{ registration_id }}.{% endblocktranslate %}</p>{% endif %}
     {% if legal_operator_tax_id %}<p class="mt-2">{% blocktranslate with tax_id=legal_operator_tax_id %}Идентификационный номер налогоплательщика: {{ tax_id }}.{% endblocktranslate %}</p>{% endif %}
 </section>

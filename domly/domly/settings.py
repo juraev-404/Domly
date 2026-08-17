@@ -14,6 +14,14 @@ import os
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
 
+
+def _legal_env(name, default=""):
+    """Return a public legal value without exposing setup placeholders."""
+    value = os.getenv(name, "").strip()
+    if not value or value.casefold().startswith(("replace-with-", "change-me")):
+        return default
+    return value
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -179,20 +187,25 @@ EMAIL_BACKEND = os.getenv(
     'django.core.mail.backends.console.EmailBackend',
 )
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Domly <no-reply@localhost>')
-LEGAL_CONTACT_EMAIL = os.getenv('LEGAL_CONTACT_EMAIL', 'support@domly.site')
-LEGAL_OPERATOR_NAME = os.getenv('LEGAL_OPERATOR_NAME', 'Владелец сервиса Domly')
-LEGAL_OPERATOR_ADDRESS = os.getenv('LEGAL_OPERATOR_ADDRESS', 'Республика Таджикистан')
-LEGAL_OPERATOR_REGISTRATION_ID = os.getenv('LEGAL_OPERATOR_REGISTRATION_ID', '')
-LEGAL_OPERATOR_TAX_ID = os.getenv('LEGAL_OPERATOR_TAX_ID', '')
-LEGAL_DATA_PROTECTION_CERTIFICATE = os.getenv(
-    'LEGAL_DATA_PROTECTION_CERTIFICATE',
-    '',
+LEGAL_CONTACT_EMAIL = _legal_env('LEGAL_CONTACT_EMAIL', 'support@domly.site')
+LEGAL_OPERATOR_NAME = _legal_env(
+    'LEGAL_OPERATOR_NAME',
+    'Администратор сервиса Domly',
+)
+LEGAL_OPERATOR_ADDRESS = _legal_env(
+    'LEGAL_OPERATOR_ADDRESS',
+    'Республика Таджикистан',
+)
+LEGAL_OPERATOR_REGISTRATION_ID = _legal_env('LEGAL_OPERATOR_REGISTRATION_ID')
+LEGAL_OPERATOR_TAX_ID = _legal_env('LEGAL_OPERATOR_TAX_ID')
+LEGAL_DATA_PROTECTION_CERTIFICATE = _legal_env(
+    'LEGAL_DATA_PROTECTION_CERTIFICATE'
 )
 LEGAL_TERMS_VERSION = '2026-08-17'
 LEGAL_PRIVACY_VERSION = '2026-08-17'
 LEGAL_RULES_VERSION = '2026-08-17'
 LEGAL_DOCUMENTS_DRAFT = (
-    LEGAL_OPERATOR_NAME == 'Владелец сервиса Domly'
+    LEGAL_OPERATOR_NAME == 'Администратор сервиса Domly'
     or LEGAL_OPERATOR_ADDRESS == 'Республика Таджикистан'
     or not LEGAL_OPERATOR_REGISTRATION_ID
     or not LEGAL_DATA_PROTECTION_CERTIFICATE
