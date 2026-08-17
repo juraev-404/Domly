@@ -9,7 +9,7 @@ Nginx, and `domly.settings_prod`.
 
 ```bash
 sudo apt update
-sudo apt install -y git python3-venv python3-pip postgresql redis-server nginx certbot python3-certbot-nginx
+sudo apt install -y git gettext python3-venv python3-pip postgresql redis-server nginx certbot python3-certbot-nginx
 sudo install -d -o domly -g www-data -m 0750 /srv/domly
 sudo install -d -o root -g domly -m 0750 /etc/domly
 sudo install -d -o domly -g domly -m 0750 /var/backups/domly
@@ -85,7 +85,11 @@ sudo chmod 0750 scripts/backup.sh
 sudo systemctl daemon-reload
 sudo systemctl enable --now redis-server domly.service domly-maintenance.timer domly-backup.timer
 sudo systemctl status domly --no-pager
-curl --unix-socket /run/domly/gunicorn.sock http://localhost/health/
+curl --fail --show-error \
+  --unix-socket /run/domly/gunicorn.sock \
+  -H "Host: domly.site" \
+  -H "X-Forwarded-Proto: https" \
+  http://localhost/health/
 ```
 
 ## 5. Nginx and HTTPS

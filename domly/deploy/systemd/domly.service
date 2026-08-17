@@ -14,6 +14,7 @@ RuntimeDirectoryMode=0750
 UMask=0027
 ExecStart=/srv/domly/venv/bin/gunicorn domly.wsgi:application \
     --bind unix:/run/domly/gunicorn.sock \
+    --control-socket /run/domly/gunicorn-control.sock \
     --workers 3 \
     --timeout 60 \
     --max-requests 1000 \
