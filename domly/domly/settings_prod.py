@@ -95,6 +95,18 @@ TRUST_X_REAL_IP = True
 FILE_UPLOAD_PERMISSIONS = 0o640
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o750
 
+# Static assets are public and must remain readable by Nginx even when
+# collectstatic is run by the unprivileged deployment user. Uploaded media
+# keeps the stricter permissions above.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "domly.storage.PublicStaticFilesStorage",
+    },
+}
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

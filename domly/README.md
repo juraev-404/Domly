@@ -50,8 +50,9 @@ pnpm run build:css
 ```
 
 During active interface work, use `pnpm run watch:css` in a separate terminal.
-Production deployment should run `pnpm run build:css` and then
-`python manage.py collectstatic --noinput`.
+Build and commit CSS during development. Production deployment uses the
+committed CSS and runs `python manage.py collectstatic --noinput`; see
+`scripts/deploy.sh` for the complete repeatable update sequence.
 
 Registration, email-change, and password-reset codes are sent through Django's
 email backend. Development prints emails to the console. Configure an SMTP

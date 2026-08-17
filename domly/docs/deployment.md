@@ -57,9 +57,12 @@ set +a
 /srv/domly/venv/bin/python manage.py check --deploy
 /srv/domly/venv/bin/python manage.py migrate
 /srv/domly/venv/bin/python manage.py collectstatic --noinput
-/srv/domly/venv/bin/python manage.py compilemessages
 /srv/domly/venv/bin/python manage.py createsuperuser
 ```
+
+Translation catalogs are compiled and committed during development. Do not run
+`compilemessages` in the server checkout because that can modify tracked `.mo`
+files and block the next `git pull --ff-only`.
 
 Do not continue if `check --deploy` reports warnings other than `W005` and
 `W021`: those two remain intentional until every subdomain is HTTPS-only and
@@ -135,3 +138,19 @@ sudo -u postgres pg_isready
 redis-cli ping
 curl -fsS https://domly.site/health/
 ```
+
+## 7. Later deployments
+
+After the initial installation, deploy from the unprivileged `domly` account
+with the repository script:
+
+```bash
+cd /srv/domly/repo/domly
+bash scripts/deploy.sh
+```
+
+The script refuses to run as root or with a dirty server checkout, performs a
+fast-forward-only pull, installs pinned dependencies, runs the production
+check, migrations and `collectstatic`, restarts Gunicorn, and verifies the
+public health endpoint. Public static assets use `0644` files and `0755`
+directories; uploaded media keeps the stricter production permissions.

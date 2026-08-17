@@ -21,8 +21,9 @@ a catalog, compile it on Windows without GNU gettext by running:
 python scripts/compile_messages.py
 ```
 
-On Linux, Django's standard `python manage.py compilemessages` command can be
-used instead. Commit both the `.po` sources and compiled `.mo` files.
+Commit both the `.po` sources and compiled `.mo` files. Do not run
+`compilemessages` inside the production checkout: generated binary differences
+would leave local changes and block the next fast-forward deployment.
 
 Authentication currently uses six-digit email codes for registration, email
 changes, and password recovery. Phone data remains optional for a possible

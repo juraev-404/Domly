@@ -1,7 +1,7 @@
 """Compile Domly's simple UTF-8 gettext catalogs without external tools.
 
-The production server may use Django's regular ``compilemessages`` command.
-This helper keeps Windows development reproducible when GNU gettext is absent.
+Run this during development and commit both PO and MO files. Production deploys
+the committed catalogs and must not recompile them in the server checkout.
 """
 
 from __future__ import annotations
