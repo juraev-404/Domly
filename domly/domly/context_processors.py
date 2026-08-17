@@ -19,9 +19,25 @@ OG_LOCALES = {
     "en": "en_US",
 }
 
+LANGUAGE_NATIVE_NAMES = {
+    "ru": "Русский",
+    "tg": "Тоҷикӣ",
+    "en": "English",
+}
+
 
 def seo(request):
     language = (get_language() or "ru").split("-")[0]
+    current_url = request.get_full_path()
+    language_switch_options = tuple(
+        {
+            "code": code,
+            "label": LANGUAGE_NATIVE_NAMES.get(code, str(label)),
+            "url": translate_url(current_url, code),
+            "is_current": code == language,
+        }
+        for code, label in settings.LANGUAGES
+    )
     url_name = getattr(request.resolver_match, "url_name", None)
     is_indexable = url_name in INDEXABLE_URL_NAMES
     alternate_language_urls = ()
@@ -52,4 +68,5 @@ def seo(request):
         "og_locale_alternates": tuple(
             locale for code, locale in OG_LOCALES.items() if code != language
         ),
+        "language_switch_options": language_switch_options,
     }

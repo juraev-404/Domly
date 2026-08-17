@@ -16,10 +16,10 @@
     <nav class="gallery-scrollbar -mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="{% translate 'Быстрые категории' %}">
         <a href="{{ catalog_url }}?deal_type=rent&amp;property_type=" class="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition {% if deal_type == 'rent' and not property_type %}bg-black text-white{% else %}bg-white text-gray-700 hover:bg-gray-200{% endif %}">{% translate "Все" %}</a>
         {% for value, label in deal_types %}
-            <a href="?deal_type={{ value }}" class="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition {% if deal_type == value %}bg-black text-white{% else %}bg-white text-gray-700 hover:bg-gray-200{% endif %}">{{ label }}</a>
+            <a href="{{ catalog_url }}?deal_type={{ value }}&amp;property_type={{ property_type }}" class="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition {% if deal_type == value %}bg-black text-white{% else %}bg-white text-gray-700 hover:bg-gray-200{% endif %}">{{ label }}</a>
         {% endfor %}
         {% for value, label in property_types %}
-            <a href="?property_type={{ value }}" class="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition {% if property_type == value %}bg-black text-white{% else %}bg-white text-gray-700 hover:bg-gray-200{% endif %}">{{ label }}</a>
+            <a href="{{ catalog_url }}?deal_type={{ deal_type }}&amp;property_type={{ value }}" class="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition {% if property_type == value %}bg-black text-white{% else %}bg-white text-gray-700 hover:bg-gray-200{% endif %}">{{ label }}</a>
         {% endfor %}
     </nav>
 

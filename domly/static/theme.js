@@ -19,11 +19,13 @@
             const label = isDark
                 ? button.dataset.enableLightLabel
                 : button.dataset.enableDarkLabel;
+            const darkIcon = button.querySelector('[data-theme-icon="dark"]');
+            const lightIcon = button.querySelector('[data-theme-icon="light"]');
             button.setAttribute("aria-label", label);
             button.setAttribute("title", label);
             button.setAttribute("aria-pressed", String(isDark));
-            button.querySelector('[data-theme-icon="dark"]').hidden = isDark;
-            button.querySelector('[data-theme-icon="light"]').hidden = !isDark;
+            darkIcon.toggleAttribute("hidden", isDark);
+            lightIcon.toggleAttribute("hidden", !isDark);
         });
     };
 

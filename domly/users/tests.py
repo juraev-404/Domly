@@ -3,6 +3,7 @@ from io import BytesIO, StringIO
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
+from django.conf import settings
 from django.core import mail
 from django.core.cache import cache
 from django.core.management import call_command
@@ -719,7 +720,17 @@ class LocalizationTests(TestCase):
         self.assertContains(response, 'data-theme="light"', html=False)
         self.assertContains(response, 'data-theme-toggle')
         self.assertContains(response, 'data-enable-dark-label="Включить тёмную тему"')
-        self.assertContains(response, 'src="/static/theme.js"', html=False)
+        self.assertContains(
+            response, 'src="/static/theme.js?v=20260817"', html=False
+        )
+
+    def test_theme_script_switches_between_moon_and_sun_icons(self):
+        theme_script = (settings.BASE_DIR / "static" / "theme.js").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn('darkIcon.toggleAttribute("hidden", isDark)', theme_script)
+        self.assertIn('lightIcon.toggleAttribute("hidden", !isDark)', theme_script)
 
     def test_language_endpoint_persists_english_and_translates_navigation(self):
         with translation.override("ru"):
@@ -750,6 +761,54 @@ class LocalizationTests(TestCase):
         self.assertContains(page, 'data-enable-light-label="Enable light theme"')
         self.assertContains(page, 'value="Худжанд"', html=False)
         self.assertNotContains(page, ">Худжанд<", html=False)
+
+    def test_language_switcher_can_change_language_repeatedly(self):
+        with translation.override("ru"):
+            language_url = reverse("set_language")
+            russian_home = reverse("listing_list")
+        with translation.override("en"):
+            english_home = reverse("listing_list")
+        with translation.override("tg"):
+            tajik_home = reverse("listing_list")
+
+        page = self.client.get(russian_home)
+        options = {
+            option["code"]: option["url"]
+            for option in page.context["language_switch_options"]
+        }
+        self.assertEqual(options["en"], english_home)
+
+        response = self.client.post(
+            language_url,
+            {"language": "en", "next": options["en"]},
+        )
+        self.assertRedirects(response, english_home)
+
+        page = self.client.get(english_home)
+        options = {
+            option["code"]: option["url"]
+            for option in page.context["language_switch_options"]
+        }
+        self.assertEqual(options["tg"], tajik_home)
+
+        response = self.client.post(
+            language_url,
+            {"language": "tg", "next": options["tg"]},
+        )
+        self.assertRedirects(response, tajik_home)
+
+        page = self.client.get(tajik_home)
+        options = {
+            option["code"]: option["url"]
+            for option in page.context["language_switch_options"]
+        }
+        self.assertEqual(options["ru"], russian_home)
+
+        response = self.client.post(
+            language_url,
+            {"language": "ru", "next": options["ru"]},
+        )
+        self.assertRedirects(response, russian_home)
 
     def test_tajik_profile_has_triangle_mobile_switcher(self):
         self.client.force_login(self.user)

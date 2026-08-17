@@ -458,6 +458,27 @@ class ListingListTests(TestCase):
 
         self.assertEqual(response.context["property_type"], "")
 
+    def test_quick_categories_preserve_the_other_selected_filter(self):
+        response = self.client.get(
+            reverse("listing_list"),
+            {
+                "deal_type": Listing.DealType.SALE,
+                "property_type": Listing.PropertyType.HOUSE,
+            },
+        )
+        catalog_url = reverse("listing_list")
+
+        self.assertContains(
+            response,
+            f'href="{catalog_url}?deal_type=rent&amp;property_type=house"',
+            html=False,
+        )
+        self.assertContains(
+            response,
+            f'href="{catalog_url}?deal_type=sale&amp;property_type=room"',
+            html=False,
+        )
+
     def test_search_and_property_filters_are_applied(self):
         response = self.client.get(
             reverse("listing_list"),
