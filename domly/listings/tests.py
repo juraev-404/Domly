@@ -1911,6 +1911,17 @@ class SeoAndLegalTests(TestCase):
         )
 
         self.assertContains(response, 'href="/static/css/app.css?v=20260817-3"')
+        self.assertContains(
+            response,
+            'rel="icon" type="image/png" href="/static/images/domly-icon-v3-clean-transparent.png?v=20260817-1"',
+            html=False,
+        )
+        self.assertContains(
+            response,
+            'rel="apple-touch-icon" href="/static/images/domly-icon-v3-clean-transparent.png?v=20260817-1"',
+            html=False,
+        )
+        self.assertContains(response, '<meta name="theme-color" content="#000000">')
         self.assertNotContains(response, "cdn.tailwindcss.com")
         self.assertContains(response, '<meta name="description"')
         self.assertContains(response, '<meta name="robots" content="index,follow">')
