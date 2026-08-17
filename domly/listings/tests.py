@@ -1904,7 +1904,7 @@ class SeoAndLegalTests(TestCase):
             HTTP_HOST="domly.site",
         )
 
-        self.assertContains(response, 'href="/static/css/app.css"')
+        self.assertContains(response, 'href="/static/css/app.css?v=20260817-2"')
         self.assertNotContains(response, "cdn.tailwindcss.com")
         self.assertContains(response, '<meta name="description"')
         self.assertContains(response, '<meta name="robots" content="index,follow">')
